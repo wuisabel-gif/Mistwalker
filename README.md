@@ -9,6 +9,8 @@ reuses the original *Mistwalker* foundation (a sword‑wielding warrior in a dea
 forest stalked by the undead) but reframes it as an atmospheric Norse‑underworld
 journey rather than a generic zombie arena.
 
+![Mistwalker gameplay in Unity](docs/images/mistwalker-gameplay.png)
+
 ---
 
 ## The Idea
