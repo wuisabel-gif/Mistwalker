@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MISTWALKER : A Saga of the Fog</title>
+<title>MISTWALKER: A Saga of the Fog</title>
 <meta name="description" content="A Norse survival-horror reimagining built in Unity. Carry your blade. Hold your lantern. Do not stop walking." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,7 +107,7 @@ section{padding:clamp(56px,9vw,104px) 0}
 .h2{font:800 clamp(1.9rem,4.5vw,2.9rem)/1.05 var(--font-body); letter-spacing:-.02em; margin:14px 0 14px; text-wrap:balance}
 .sub{color:var(--text2); max-width:60ch}
 
-/* build log : specimen rows */
+/* build log: specimen rows */
 .log{margin-top:clamp(32px,5vw,56px); display:grid; gap:0}
 .entry{
   display:grid; grid-template-columns:64px 1.1fr 1.4fr; gap:clamp(18px,3vw,40px);
@@ -220,9 +220,9 @@ footer small{font-size:.82rem}
       </div>
     </div>
     <figure class="figure reveal">
-      <img src="images/04-portrait.jpg" alt="Aldric the Oathbroken : the viking warrior in the misted forest at night"
+      <img src="images/04-portrait.jpg" alt="Aldric the Oathbroken: the viking warrior in the misted forest at night"
            onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'images/04-portrait.jpg'}))">
-      <figcaption><b>Aldric the Oathbroken</b>Denied the halls of the slain : for now.</figcaption>
+      <figcaption><b>Aldric the Oathbroken</b>Denied the halls of the slain: for now.</figcaption>
     </figure>
   </div>
 </header>
@@ -244,7 +244,7 @@ footer small{font-size:.82rem}
       <div class="reveal">
         <span class="eyebrow">The Build Log</span>
         <h2 class="h2">Forging a blade into the fist.</h2>
-        <p class="sub">Putting one sword in one hand turned into a tour of nearly every core Unity system : prefabs, bones, active-state, and a 100× scale trap. The screenshots below are the real debugging trail.</p>
+        <p class="sub">Putting one sword in one hand turned into a tour of nearly every core Unity system: prefabs, bones, active-state, and a 100× scale trap. The screenshots below are the real debugging trail.</p>
       </div>
 
       <div class="log">
@@ -252,7 +252,7 @@ footer small{font-size:.82rem}
           <div class="idx tnum">01</div>
           <div>
             <h3>The invisible blade</h3>
-            <p>Valid mesh, enabled renderer, a material, correct bounds : and nothing on screen. Only the transform gizmo floated in the dark. The first clue that something upstream was wrong.</p>
+            <p>Valid mesh, enabled renderer, a material, correct bounds: and nothing on screen. Only the transform gizmo floated in the dark. The first clue that something upstream was wrong.</p>
           </div>
           <div class="shot">
             <img src="images/01-invisible.jpg" alt="Unity scene view showing only a transform gizmo, no visible sword mesh"
@@ -264,7 +264,7 @@ footer small{font-size:.82rem}
           <div class="idx tnum">02</div>
           <div>
             <h3>The wrong hand</h3>
-            <p>The warrior gripped… nothing. The <code>PlayerController.weapon</code> reference pointed at an axe under a <em>disabled duplicate</em> warrior : so everything attached there never rendered.</p>
+            <p>The warrior gripped… nothing. The <code>PlayerController.weapon</code> reference pointed at an axe under a <em>disabled duplicate</em> warrior: so everything attached there never rendered.</p>
           </div>
           <div class="shot">
             <img src="images/02-grip.jpg" alt="Close-up of the warrior's gauntleted hand, gripping nothing"
@@ -288,7 +288,7 @@ footer small{font-size:.82rem}
           <div class="idx tnum">04</div>
           <div>
             <h3>The 100× scale trap</h3>
-            <p>Attached to the live hand at last : but the bones carried a <b>lossyScale of 100</b>. A <code>localScale</code> of 1 rendered a four-metre greatblade. <code>localScale = 1 / parentLossyScale</code> brought it to ~0.8&nbsp;m.</p>
+            <p>Attached to the live hand at last: but the bones carried a <b>lossyScale of 100</b>. A <code>localScale</code> of 1 rendered a four-metre greatblade. <code>localScale = 1 / parentLossyScale</code> brought it to ~0.8&nbsp;m.</p>
           </div>
           <div class="shot">
             <img src="images/05-scale.jpg" alt="A giant oversized sword blade extending from the warrior's hand"
@@ -300,7 +300,7 @@ footer small{font-size:.82rem}
           <div class="idx tnum">05</div>
           <div>
             <h3>Blade in hand</h3>
-            <p>Normalised, gripped, and parented to the animating bone : the runic blade finally rides with the warrior through every frame of the walk. One last pass on the wrist angle and the saga begins.</p>
+            <p>Normalised, gripped, and parented to the animating bone: the runic blade finally rides with the warrior through every frame of the walk. One last pass on the wrist angle and the saga begins.</p>
           </div>
           <div class="shot">
             <img src="images/06-blade.jpg" alt="The sword gripped in the warrior's hand at correct scale"
@@ -327,7 +327,7 @@ footer small{font-size:.82rem}
         <div class="card reveal">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 17l-4.9 1.1.9-5.5-4-3.9 5.5-.8L12 3z"/></svg>
           <h4>Honor, not score</h4>
-          <p>Every draugr banished restores honor : the run currency, the health economy, and the win condition in one.</p>
+          <p>Every draugr banished restores honor: the run currency, the health economy, and the win condition in one.</p>
         </div>
         <div class="card reveal">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 4l6 6-9 9-6-6 9-9zM4 14l-1 7 7-1"/></svg>
@@ -342,8 +342,8 @@ footer small{font-size:.82rem}
   <section style="padding-top:0">
     <div class="wrap reveal">
       <div class="quote">
-        <p>“An object can be active itself and still vanish : because a parent up the chain is disabled. The whole branch goes dark.”</p>
-        <cite>: from LEARNING.md, the lesson that cracked the invisible-blade bug</cite>
+        <p>“An object can be active itself and still vanish: because a parent up the chain is disabled. The whole branch goes dark.”</p>
+        <cite>:  from LEARNING.md, the lesson that cracked the invisible-blade bug</cite>
       </div>
       <div class="tags">
         <span class="tag accent">Unity 6000.2.12f1</span>
@@ -448,7 +448,7 @@ footer small{font-size:.82rem}
 <footer>
   <div class="wrap grid">
     <div class="brand"><b style="font-family:var(--font-display);letter-spacing:.06em">MISTWALKER</b></div>
-    <small>Built on the <em>Mistwalker</em> prototype · Unity 6 · <span class="tnum">2026</span> · Skál : walk on.</small>
+    <small>Built on the <em>Mistwalker</em> prototype · Unity 6 · <span class="tnum">2026</span> · Skál: walk on.</small>
   </div>
 </footer>
 

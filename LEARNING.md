@@ -1,6 +1,6 @@
 # My Unity Learning Curve
 
-A running log of what I actually learned building and modifying this project : written
+A running log of what I actually learned building and modifying this project: written
 from real problems I hit, not a textbook. Most of these lessons came from one
 "simple" task: **swapping the warrior's axe for a Viking sword.** That one job
 touched almost every core Unity concept.
@@ -28,7 +28,7 @@ a while, then it clicks.** The humbling part is where the real learning is.
 
 ---
 
-## Stage 1 : The editor is a 3D world, not a code file
+## Stage 1: The editor is a 3D world, not a code file
 
 What I learned first:
 
@@ -36,23 +36,23 @@ What I learned first:
   can show completely different things (different camera, different angle).
 - **Play mode is a sandbox.** Any change you make while the game is playing is
   **thrown away** when you stop. I lost edits more than once before this sank in.
-- **Selecting** an object and pressing **F** frames it in the Scene view : but only if
+- **Selecting** an object and pressing **F** frames it in the Scene view: but only if
   the mouse is hovering over the Scene view. Tiny detail, big time‑saver.
 
 ---
 
-## Stage 2 : GameObjects, Components, and the Inspector
+## Stage 2: GameObjects, Components, and the Inspector
 
 - A **GameObject** is an empty container. It does nothing until you add **Components**
   (MeshFilter = the shape, MeshRenderer = makes it visible, Collider, scripts, etc.).
 - The **Inspector** is just a live view of those components. Transform (Position /
   Rotation / Scale) is the one every object has.
 - A mesh needs **all three**: a MeshFilter (which mesh), a MeshRenderer (enabled), and
-  a **Material** : miss any one and you see nothing.
+  a **Material**: miss any one and you see nothing.
 
 ---
 
-## Stage 3 : Prefabs are templates, instances are copies
+## Stage 3: Prefabs are templates, instances are copies
 
 - A **prefab** is a reusable blueprint stored as an asset. Dragging it into the scene
   creates an **instance** linked back to the prefab.
@@ -60,11 +60,11 @@ What I learned first:
   prefab asset changes every instance.
 - **Prefab isolation mode** ("Open" on the prefab) renders the object on a neutral
   background. This became my secret weapon: it proved the *asset was fine* even when
-  the in‑scene copy refused to show up : which pointed the bug elsewhere.
+  the in‑scene copy refused to show up: which pointed the bug elsewhere.
 
 ---
 
-## Stage 4 : Parenting, bones, and local vs world space
+## Stage 4: Parenting, bones, and local vs world space
 
 This is where it got real.
 
@@ -73,26 +73,26 @@ This is where it got real.
 - A character is a **skeleton of bones** (nested GameObjects). To put a weapon in a
   hand, you parent it to the **hand bone**, and it follows the animation for free.
 - **World‑space orientation breaks under animation.** I first rotated the sword to
-  point "down" in world space : perfect in the bind pose, totally wrong once the
+  point "down" in world space: perfect in the bind pose, totally wrong once the
   idle animation moved the arm. The fix: orient in the **hand's local space**, so the
   blade keeps the right angle in *every* animation frame.
 
-> 💡 Biggest mental shift: a held weapon's transform is meaningless in isolation :
+> 💡 Biggest mental shift: a held weapon's transform is meaningless in isolation : 
 > it only makes sense **relative to the bone it hangs from.**
 
 ---
 
-## Stage 5 : The bug that taught me the most: "it won't render"
+## Stage 5: The bug that taught me the most: "it won't render"
 
 The sword had a valid mesh, an enabled renderer, a material, and correct bounds…
-and was **completely invisible** in the scene and game : but visible in prefab
+and was **completely invisible** in the scene and game: but visible in prefab
 isolation. Chasing that taught me a stack of lessons:
 
 1. **`activeInHierarchy` vs `activeSelf`.** An object can be "active" itself but still
    not render because a **parent up the chain is disabled**. The whole branch goes dark.
 2. **Skinned meshes deform from bone *transforms*, not bone *active state*.** So a
    character's body can look perfectly fine on screen while its bone GameObjects are
-   technically inactive : which is exactly why my weapon (a normal MeshRenderer
+   technically inactive: which is exactly why my weapon (a normal MeshRenderer
    parented to a bone) vanished while the warrior still showed.
 3. **There were two warriors.** A *disabled* duplicate (`Warrior`) held the legacy
    skeleton and the axe the `PlayerController.weapon` field still pointed at, while
@@ -104,12 +104,12 @@ isolation. Chasing that taught me a stack of lessons:
    signal.
 
 > 💡 Debugging lesson: when something is invisible, **isolate the variable.** I dropped
-> a bright unlit‑magenta cube at the same spot : when *it* didn't show either, I knew
+> a bright unlit‑magenta cube at the same spot: when *it* didn't show either, I knew
 > the problem was the *location/parent*, not the sword mesh. That one test cracked it.
 
 ---
 
-## Stage 6 : Scale is a trap
+## Stage 6: Scale is a trap
 
 - The visible warrior was imported at **100× scale**. Its bones carry a `lossyScale`
   of 100, so a sword at `localScale = 1` rendered as a **3–4 meter monster blade.**
@@ -121,12 +121,12 @@ isolation. Chasing that taught me a stack of lessons:
 
 ---
 
-## Stage 7 : Editor scripting is a superpower
+## Stage 7: Editor scripting is a superpower
 
 - A C# file in an **`Assets/Editor/`** folder can add menu items with `[MenuItem("Tools/...")]`.
 - When the GUI fought me (drag‑and‑drop misfiring, copy‑paste renaming objects), a
-  **one‑click editor tool** that does the work in code : `PrefabUtility.InstantiatePrefab`,
-  `SetParent`, set transform : was deterministic and repeatable.
+  **one‑click editor tool** that does the work in code: `PrefabUtility.InstantiatePrefab`,
+  `SetParent`, set transform: was deterministic and repeatable.
 - I learned to **make the editor print what I needed**: `Debug.Log` of positions,
   active states, bounds, parent chains. Half of solving the invisible‑sword bug was
   just writing small diagnostic commands (`Map Warriors`, `Trace Active Chain`,
@@ -137,10 +137,10 @@ isolation. Chasing that taught me a stack of lessons:
 
 ---
 
-## Stage 8 : Workflow lessons (the unglamorous but vital ones)
+## Stage 8: Workflow lessons (the unglamorous but vital ones)
 
 - **Scripts must recompile before menu items appear.** Saving the file isn't always
-  enough : forcing an asset refresh (Cmd+R) reliably triggers the compile.
+  enough: forcing an asset refresh (Cmd+R) reliably triggers the compile.
 - **iCloud + Unity = conflict copies.** Editing project files on disk while the editor
   is open spawned `filename 2.cs` duplicates that broke the build. Now I check for
   ` 2.cs` files after every external edit.
@@ -160,7 +160,7 @@ isolation. Chasing that taught me a stack of lessons:
 3. **Isolate one variable at a time.** The magenta cube and prefab‑isolation view
    each removed an entire class of possible causes.
 4. **The Scene is a graph, not a list.** Almost every hard bug traced back to *where*
-   an object sat in the hierarchy : its parent, its scale, its active branch.
+   an object sat in the hierarchy: its parent, its scale, its active branch.
 
 ---
 
@@ -178,4 +178,4 @@ isolation. Chasing that taught me a stack of lessons:
 
 ---
 
-*Still climbing the curve : but now I know which way is up.*
+*Still climbing the curve: but now I know which way is up.*

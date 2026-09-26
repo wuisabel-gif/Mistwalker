@@ -31,7 +31,7 @@ public static class SwordAttacher
         inst.transform.localRotation = weapon.transform.localRotation;
         inst.name = "Viking_Sword";
 
-        // Hide the old axe's (now broken) renderer so only the sword shows. Keep the object :
+        // Hide the old axe's (now broken) renderer so only the sword shows. Keep the object : 
         // VikingChampion still uses it as the weapon reference for hit detection.
         var mr = weapon.GetComponent<MeshRenderer>();
         if (mr != null) mr.enabled = false;
@@ -120,7 +120,7 @@ public static class SwordAttacher
         float halfLen = Mathf.Max(ext.x, Mathf.Max(ext.y, ext.z));
         Vector3 hiltLocal = mesh.bounds.center + bladeLocal * halfLen * hiltSign;
         Vector3 hiltWorldNow = mf.transform.TransformPoint(hiltLocal);
-        sword.transform.position += (handGripWorld - hiltWorldNow);
+        sword.transform.position += (handGripWorld: hiltWorldNow);
 
         Selection.activeGameObject = sword;
         Debug.Log("[SwordAttacher] Placed. hiltSign=" + hiltSign + " bladeLocal=" + bladeLocal +
@@ -226,7 +226,7 @@ public static class SwordAttacher
         sword.transform.localScale = Vector3.one;
         Selection.activeGameObject = sword;
         Debug.Log("[SwordAttacher] Attached sword to ACTIVE 'hand.r'. activeInHierarchy=" + sword.activeInHierarchy +
-                  " worldPos=" + sword.transform.position + ". Now visible : tune orientation next.");
+                  " worldPos=" + sword.transform.position + ". Now visible: tune orientation next.");
     }
 
     [MenuItem("Tools/List Warrior1 Hand Bones")]
