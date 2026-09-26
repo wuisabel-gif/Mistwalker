@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 46a1629d378577f46bc75a4ac757936d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - weapon: {instanceID: 0}
+  - axeSound: {fileID: 8300000, guid: c9c8dbea6f83797499f405e9524c53ba, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
