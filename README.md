@@ -86,12 +86,8 @@ The pillars of the design:
 1. Install **Unity 6 (6000.2.x)** via Unity Hub.
 2. Clone / open this folder as a Unity project.
 3. Open the main scene: `Assets/Scenes/SampleScene.unity`.
-4. Press **Play**.
-
-> ⚠️ **iCloud note:** this project lives in iCloud Drive. Editing files on disk while
-> the editor is open can spawn `filename 2.cs` conflict copies that break compilation.
-> If the build suddenly fails, search the project for files ending in ` 2.cs` and delete them.
-
+4. Press **Play**
+   
 ---
 
 ## Project Structure
