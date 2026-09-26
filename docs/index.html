@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MISTWALKER : A Saga of the Fog</title>
+<meta name="description" content="A Norse survival-horror reimagining built in Unity. Carry your blade. Hold your lantern. Do not stop walking." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Cinzel:wght@500;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --background:#150F0B; --surface1:#211A15; --surface2:#2A221C; --border:#2A221C; --border-visible:#3A3128;
+  --text1:#F6F1E9; --text2:#B7AC9C; --text3:#8C8172; --text4:#6C6253;
+  --accent:#EF885A; --accent-600:#E5743F; --accent-subtle:#2A1A12;
+  --font-display:"Cinzel", serif;
+  --font-body:"Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:"Geist Mono", ui-monospace, Menlo, monospace;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --sp-md:16px; --sp-lg:24px; --sp-xl:32px; --sp-2xl:48px; --sp-3xl:64px;
+  --r-control:11px; --r-card:16px; --r-pill:999px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--background); color:var(--text1);
+  font:400 17px/1.55 var(--font-body); -webkit-font-smoothing:antialiased;
+  overflow-x:hidden; position:relative; min-height:100vh;
+}
+/* warm wall: coral radial glow + faint grain */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(60% 50% at 88% -8%, rgba(239,136,90,0.16), transparent 60%),
+             radial-gradient(40% 40% at 8% 110%, rgba(239,136,90,0.06), transparent 60%);
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.035;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+main,header,footer{position:relative; z-index:1}
+.wrap{width:min(1120px,92vw); margin-inline:auto}
+a{color:var(--accent); text-decoration:none}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky; top:0; z-index:50; border-bottom:1px solid var(--border);
+  background:color-mix(in srgb, var(--background) 72%, transparent);
+  backdrop-filter:blur(14px);
+}
+nav .wrap{display:flex; align-items:center; justify-content:space-between; height:64px}
+.brand{display:flex; align-items:center; gap:12px; font-weight:700; letter-spacing:-.01em}
+.brand .rune{width:26px;height:26px;color:var(--accent)}
+.brand b{font:700 1.05rem/1 var(--font-display); letter-spacing:.06em}
+.pill{
+  border:1px solid var(--accent-600); color:var(--accent); background:transparent;
+  border-radius:var(--r-pill); padding:8px 18px; font:600 .9rem/1 var(--font-body);
+  transition:background var(--ease) .18s, color var(--ease) .18s;
+}
+.pill:hover{background:var(--accent); color:var(--accent-subtle)}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(56px,11vw,120px) 0 clamp(40px,7vw,80px)}
+.hero .grid{display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(28px,5vw,64px); align-items:center}
+.kicker{
+  display:inline-flex; align-items:center; gap:10px; color:var(--text3);
+  font:600 .78rem/1 var(--font-body); letter-spacing:.22em; text-transform:uppercase; margin-bottom:22px;
+}
+.kicker::before{content:""; width:26px; height:1px; background:var(--accent)}
+h1{
+  font:800 clamp(3rem,9vw,5.6rem)/0.94 var(--font-display);
+  letter-spacing:.01em; text-wrap:balance; margin-bottom:22px;
+}
+h1 .fog{color:var(--accent)}
+.lede{font-size:clamp(1.05rem,2vw,1.2rem); color:var(--text2); max-width:46ch; text-wrap:pretty}
+.cta-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:32px}
+.btn{
+  display:inline-flex; align-items:center; gap:9px; border-radius:var(--r-control);
+  padding:12px 20px; font:600 .98rem/1 var(--font-body); transition:all var(--ease) .18s; cursor:pointer;
+}
+.btn-primary{background:var(--accent); color:var(--accent-subtle); border:1px solid var(--accent)}
+.btn-primary:hover{background:var(--accent-600)}
+.btn-ghost{background:var(--surface1); color:var(--text2); border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text1); border-color:var(--border-visible); background:var(--surface2)}
+.btn:active{transform:translateY(1px)}
+
+/* hero figure */
+.figure{position:relative; border:1px solid var(--border-visible); border-radius:var(--r-card); overflow:hidden; background:var(--surface1)}
+.figure::after{content:""; position:absolute; inset:0; box-shadow:inset 0 0 90px rgba(239,136,90,.10); pointer-events:none}
+.figure img{display:block; width:100%; height:100%; object-fit:cover; aspect-ratio:4/5}
+.figure figcaption{
+  position:absolute; left:0; right:0; bottom:0; padding:16px 18px;
+  background:linear-gradient(to top, rgba(21,15,11,.92), transparent);
+  font:500 .82rem/1.4 var(--font-body); color:var(--text2);
+}
+.figure figcaption b{color:var(--text1); font-weight:700; display:block; font-size:.95rem}
+
+/* ---------- stats ---------- */
+.stats{border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:clamp(28px,5vw,44px) 0; margin-top:clamp(40px,7vw,72px)}
+.stats .row{display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(16px,4vw,40px)}
+.stat .n{font:800 clamp(1.6rem,4vw,2.4rem)/1 var(--font-display); color:var(--accent); letter-spacing:.02em}
+.stat .l{margin-top:8px; color:var(--text3); font-size:.86rem; letter-spacing:.02em}
+
+/* ---------- section ---------- */
+section{padding:clamp(56px,9vw,104px) 0}
+.eyebrow{color:var(--accent); font:600 .78rem/1 var(--font-body); letter-spacing:.2em; text-transform:uppercase}
+.h2{font:800 clamp(1.9rem,4.5vw,2.9rem)/1.05 var(--font-body); letter-spacing:-.02em; margin:14px 0 14px; text-wrap:balance}
+.sub{color:var(--text2); max-width:60ch}
+
+/* build log : specimen rows */
+.log{margin-top:clamp(32px,5vw,56px); display:grid; gap:0}
+.entry{
+  display:grid; grid-template-columns:64px 1.1fr 1.4fr; gap:clamp(18px,3vw,40px);
+  align-items:center; padding:clamp(22px,4vw,38px) 0; border-top:1px solid var(--border);
+}
+.entry:last-child{border-bottom:1px solid var(--border)}
+.entry .idx{font:700 1.05rem/1 var(--font-mono); color:var(--accent); letter-spacing:.04em}
+.entry h3{font:700 1.35rem/1.15 var(--font-body); letter-spacing:-.01em; margin-bottom:10px}
+.entry p{color:var(--text2); font-size:.98rem; max-width:42ch}
+.entry .shot{
+  border:1px solid var(--border); border-radius:var(--r-card); overflow:hidden; background:var(--surface1);
+  transition:border-color var(--ease) .25s, transform var(--ease) .25s;
+}
+.entry .shot:hover{border-color:var(--accent-600); transform:translateY(-2px)}
+.entry .shot img{display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover}
+.entry:nth-child(even){grid-template-columns:64px 1.4fr 1.1fr}
+.entry:nth-child(even) .shot{order:-1}
+.entry:nth-child(even) .idx{order:0}
+
+/* placeholder when image missing */
+.ph{display:flex; align-items:center; justify-content:center; aspect-ratio:16/9; background:var(--surface2); color:var(--text4); font:500 .8rem/1.4 var(--font-mono); text-align:center; padding:20px}
+
+/* features */
+.feat{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:clamp(32px,5vw,52px)}
+.card{background:var(--surface1); border:1px solid var(--border); border-radius:var(--r-card); padding:clamp(1.4rem,3vw,2rem); transition:border-color var(--ease) .25s, background var(--ease) .25s}
+.card:hover{border-color:var(--accent-600); background:var(--surface2)}
+.card .ic{width:26px;height:26px;color:var(--accent);margin-bottom:16px}
+.card h4{font:700 1.15rem/1.2 var(--font-body); margin-bottom:8px}
+.card p{color:var(--text2); font-size:.95rem}
+
+/* tags */
+.tags{display:flex; flex-wrap:wrap; gap:10px; margin-top:28px}
+.tag{border:1px solid var(--border); background:var(--surface1); color:var(--text2); border-radius:var(--r-pill); padding:7px 14px; font:600 .8rem/1 var(--font-body); font-variant-numeric:tabular-nums}
+.tag.accent{color:var(--accent); border-color:var(--accent-600); background:var(--accent-subtle)}
+
+/* quote */
+.quote{border:1px solid var(--border); border-left:2px solid var(--accent); border-radius:var(--r-card); padding:clamp(28px,5vw,44px); background:var(--surface1)}
+.quote p{font:500 clamp(1.2rem,2.6vw,1.7rem)/1.4 var(--font-body); color:var(--text1); text-wrap:balance}
+.quote cite{display:block; margin-top:16px; color:var(--text3); font-style:normal; font-size:.9rem; letter-spacing:.04em}
+
+/* footer */
+footer{border-top:1px solid var(--border); padding:clamp(40px,6vw,64px) 0 56px; color:var(--text3)}
+footer .grid{display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap}
+footer .brand b{color:var(--text2)}
+footer small{font-size:.82rem}
+
+/* ---------- longship band ---------- */
+.seas{position:relative; overflow:hidden; border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:linear-gradient(180deg, var(--surface1), var(--background))}
+.seas .wrap{padding:clamp(40px,7vw,72px) 0 0; text-align:center}
+.seas .eyebrow{justify-content:center}
+.seas h2{margin-top:12px}
+.seas .ship-stage{position:relative; width:100%; margin-top:clamp(20px,4vw,36px)}
+.seas svg{display:block; width:100%; height:auto}
+.ship{transform-origin:50% 60%; animation:bob 6.5s var(--ease) infinite alternate}
+.wave{animation:drift 16s linear infinite}
+.wave.w2{animation-duration:22s}
+.wave.w3{animation-duration:30s}
+.pennant{transform-origin:600px 60px; animation:flutter 2.8s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(2px) rotate(-.7deg)}to{transform:translateY(-10px) rotate(.7deg)}}
+@keyframes drift{to{transform:translateX(-160px)}}
+@keyframes flutter{from{transform:scaleX(.78) skewX(-2deg)}to{transform:scaleX(1) skewX(3deg)}}
+.seas .fade{position:absolute; top:0; bottom:0; width:14%; z-index:2; pointer-events:none}
+.seas .fade.l{left:0; background:linear-gradient(90deg, var(--background), transparent)}
+.seas .fade.r{right:0; background:linear-gradient(270deg, var(--background), transparent)}
+
+/* reveal */
+.reveal{opacity:0; transform:translateY(22px)}
+.reveal.in{opacity:1; transform:none; transition:opacity .7s var(--ease), transform .7s var(--ease)}
+@media (prefers-reduced-motion:reduce){
+  .reveal,.reveal.in{opacity:1; transform:none; transition:none}
+  .ship,.wave,.pennant{animation:none !important}
+  html{scroll-behavior:auto}
+}
+
+@media (max-width:860px){
+  .hero .grid{grid-template-columns:1fr}
+  .figure{order:-1; max-width:420px}
+  .stats .row{grid-template-columns:repeat(2,1fr); row-gap:28px}
+  .entry,.entry:nth-child(even){grid-template-columns:1fr}
+  .entry .shot,.entry:nth-child(even) .shot{order:-1}
+  .entry .idx{display:none}
+  .feat{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">
+      <svg class="rune" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v20M12 7l6-4M12 12l6-4M12 7L6 3M12 12L6 8"/></svg>
+      <b>MISTWALKER</b>
+    </div>
+    <a class="pill" href="https://github.com/" target="_blank" rel="noopener">View on GitHub</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap grid">
+    <div class="reveal">
+      <span class="kicker">A Saga of the Fog</span>
+      <h1>Walk into the&nbsp;<span class="fog">mist.</span></h1>
+      <p class="lede">A fallen viking wakes in Niflheim, the world of fog. The dead walk the frozen forest, and the only road to Valhalla is paved with the draugr you put back in the ground. Carry your blade. Hold your lantern. Do not stop walking.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.46-1.11-1.46-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+          Clone the saga
+        </a>
+        <a class="btn btn-ghost" href="#log">Read the build log</a>
+      </div>
+    </div>
+    <figure class="figure reveal">
+      <img src="images/04-portrait.jpg" alt="Aldric the Oathbroken : the viking warrior in the misted forest at night"
+           onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'images/04-portrait.jpg'}))">
+      <figcaption><b>Aldric the Oathbroken</b>Denied the halls of the slain : for now.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<div class="stats reveal">
+  <div class="wrap row">
+    <div class="stat"><div class="n tnum">6000.2</div><div class="l">Unity version (.12f1)</div></div>
+    <div class="stat"><div class="n tnum">100×</div><div class="l">Rig scale, tamed</div></div>
+    <div class="stat"><div class="n tnum">1</div><div class="l">Runic blade</div></div>
+    <div class="stat"><div class="n tnum">02</div><div class="l">Warriors, one disabled</div></div>
+  </div>
+</div>
+
+<main>
+
+  <!-- BUILD LOG -->
+  <section id="log">
+    <div class="wrap">
+      <div class="reveal">
+        <span class="eyebrow">The Build Log</span>
+        <h2 class="h2">Forging a blade into the fist.</h2>
+        <p class="sub">Putting one sword in one hand turned into a tour of nearly every core Unity system : prefabs, bones, active-state, and a 100× scale trap. The screenshots below are the real debugging trail.</p>
+      </div>
+
+      <div class="log">
+        <article class="entry reveal">
+          <div class="idx tnum">01</div>
+          <div>
+            <h3>The invisible blade</h3>
+            <p>Valid mesh, enabled renderer, a material, correct bounds : and nothing on screen. Only the transform gizmo floated in the dark. The first clue that something upstream was wrong.</p>
+          </div>
+          <div class="shot">
+            <img src="images/01-invisible.jpg" alt="Unity scene view showing only a transform gizmo, no visible sword mesh"
+                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'images/01-invisible.jpg'}))">
+          </div>
+        </article>
+
+        <article class="entry reveal">
+          <div class="idx tnum">02</div>
+          <div>
+            <h3>The wrong hand</h3>
+            <p>The warrior gripped… nothing. The <code>PlayerController.weapon</code> reference pointed at an axe under a <em>disabled duplicate</em> warrior : so everything attached there never rendered.</p>
+          </div>
+          <div class="shot">
+            <img src="images/02-grip.jpg" alt="Close-up of the warrior's gauntleted hand, gripping nothing"
+                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'images/02-grip.jpg'}))">
+          </div>
+        </article>
+
+        <article class="entry reveal">
+          <div class="idx tnum">03</div>
+          <div>
+            <h3>Mapping the rig</h3>
+            <p>Editor diagnostics revealed two skeletons: a legacy <code>Warrior_RightHand</code> rig (disabled) and the live <code>Warrior&nbsp;(1)</code> with bones named <code>hand.r</code>. The blade belonged on the live one.</p>
+          </div>
+          <div class="shot">
+            <img src="images/03-editor.jpg" alt="Full Unity editor showing the hierarchy, game view and inspector"
+                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'images/03-editor.jpg'}))">
+          </div>
+        </article>
+
+        <article class="entry reveal">
+          <div class="idx tnum">04</div>
+          <div>
+            <h3>The 100× scale trap</h3>
+            <p>Attached to the live hand at last : but the bones carried a <b>lossyScale of 100</b>. A <code>localScale</code> of 1 rendered a four-metre greatblade. <code>localScale = 1 / parentLossyScale</code> brought it to ~0.8&nbsp;m.</p>
+          </div>
+          <div class="shot">
+            <img src="images/05-scale.jpg" alt="A giant oversized sword blade extending from the warrior's hand"
+                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'images/05-scale.jpg'}))">
+          </div>
+        </article>
+
+        <article class="entry reveal">
+          <div class="idx tnum">05</div>
+          <div>
+            <h3>Blade in hand</h3>
+            <p>Normalised, gripped, and parented to the animating bone : the runic blade finally rides with the warrior through every frame of the walk. One last pass on the wrist angle and the saga begins.</p>
+          </div>
+          <div class="shot">
+            <img src="images/06-blade.jpg" alt="The sword gripped in the warrior's hand at correct scale"
+                 onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'images/06-blade.jpg'}))">
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="reveal">
+        <span class="eyebrow">Design Pillars</span>
+        <h2 class="h2">Four ideas hold the dark together.</h2>
+      </div>
+      <div class="feat">
+        <div class="card reveal">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 15c3-3 6-3 9 0s6 3 9 0M3 9c3-3 6-3 9 0s6 3 9 0"/></svg>
+          <h4>The fog remembers</h4>
+          <p>Terrain reveals as you advance and re-darkens what you abandon. Backtracking is never safe.</p>
+        </div>
+        <div class="card reveal">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 17l-4.9 1.1.9-5.5-4-3.9 5.5-.8L12 3z"/></svg>
+          <h4>Honor, not score</h4>
+          <p>Every draugr banished restores honor : the run currency, the health economy, and the win condition in one.</p>
+        </div>
+        <div class="card reveal">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 4l6 6-9 9-6-6 9-9zM4 14l-1 7 7-1"/></svg>
+          <h4>One good blade</h4>
+          <p>No loadouts. A single runic sword. Mastery comes from spacing and timing, not gear.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE / LESSON -->
+  <section style="padding-top:0">
+    <div class="wrap reveal">
+      <div class="quote">
+        <p>“An object can be active itself and still vanish : because a parent up the chain is disabled. The whole branch goes dark.”</p>
+        <cite>: from LEARNING.md, the lesson that cracked the invisible-blade bug</cite>
+      </div>
+      <div class="tags">
+        <span class="tag accent">Unity 6000.2.12f1</span>
+        <span class="tag">Built-In RP</span>
+        <span class="tag">Cinemachine</span>
+        <span class="tag">Input System</span>
+        <span class="tag">C#</span>
+        <span class="tag">Editor Tooling</span>
+        <span class="tag">Fog of War</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- LONGSHIP BAND -->
+<section class="seas reveal">
+  <div class="wrap">
+    <span class="eyebrow">Crossing the Dead Seas</span>
+    <h2 class="h2">The drakkar carries the fallen home.</h2>
+  </div>
+  <div class="ship-stage">
+    <span class="fade l"></span><span class="fade r"></span>
+    <svg viewBox="0 0 1200 420" role="img" aria-label="A Viking longship sailing through the fog">
+      <defs>
+        <linearGradient id="sail" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2A221C"/><stop offset="1" stop-color="#211A15"/>
+        </linearGradient>
+      </defs>
+
+      <!-- fog waves (grey line-art, drifting) -->
+      <g fill="none" stroke="#3A3128" stroke-width="2" stroke-linecap="round">
+        <path class="wave w3" opacity=".5" d="M-200 330 q 60 -22 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0 t 120 0"/>
+        <path class="wave w2" opacity=".7" d="M-200 360 q 70 -26 140 0 t 140 0 t 140 0 t 140 0 t 140 0 t 140 0 t 140 0 t 140 0 t 140 0 t 140 0"/>
+        <path class="wave"    opacity="1"  stroke="#4A4034" d="M-200 392 q 80 -30 160 0 t 160 0 t 160 0 t 160 0 t 160 0 t 160 0 t 160 0 t 160 0 t 160 0"/>
+      </g>
+
+      <!-- the ship -->
+      <g class="ship" fill="none" stroke="#B7AC9C" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+        <!-- rigging -->
+        <g stroke="#6C6253" stroke-width="1.6">
+          <path d="M600 70 L360 196"/><path d="M600 70 L880 188"/>
+        </g>
+
+        <!-- mast + yard -->
+        <path d="M600 70 V250" stroke="#8C8172"/>
+        <path d="M512 96 H688" stroke="#8C8172"/>
+
+        <!-- sail -->
+        <path d="M520 98 Q600 116 680 98 L680 188 Q600 208 520 188 Z" fill="url(#sail)" stroke="#6C6253" stroke-width="2"/>
+        <g stroke="#3A3128" stroke-width="2" opacity=".9">
+          <path d="M548 104 V194"/><path d="M576 108 V198"/><path d="M604 109 V199"/><path d="M632 108 V198"/><path d="M660 104 V194"/>
+        </g>
+        <!-- one coral sail stripe (the single signal on the sail) -->
+        <path d="M520 150 Q600 168 680 150" stroke="var(--accent)" stroke-width="3" opacity=".95"/>
+
+        <!-- pennant (coral, fluttering) -->
+        <g class="pennant"><path d="M600 64 L640 56 L624 66 L640 76 L600 70 Z" fill="var(--accent)" stroke="none"/></g>
+
+        <!-- hull -->
+        <path d="M250 250 Q600 312 980 250" stroke-width="3.4"/>
+        <path d="M250 250 Q600 286 980 250" stroke="#8C8172" stroke-width="2"/>
+        <!-- top rail -->
+        <path d="M300 246 H900" stroke="#8C8172" stroke-width="2.4"/>
+
+        <!-- shield wall (mostly grey, one coral) -->
+        <g>
+          <circle cx="345" cy="247" r="14" fill="#211A15" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="390" cy="248" r="14" fill="#211A15" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="435" cy="249" r="14" fill="#2A221C" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="480" cy="250" r="14" fill="#211A15" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="525" cy="250" r="14" fill="var(--accent-subtle)" stroke="var(--accent)" stroke-width="2.4"/>
+          <circle cx="525" cy="250" r="5"  fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="675" cy="250" r="14" fill="#211A15" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="720" cy="250" r="14" fill="#2A221C" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="765" cy="249" r="14" fill="#211A15" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="810" cy="248" r="14" fill="#211A15" stroke="#6C6253" stroke-width="2"/>
+          <circle cx="855" cy="247" r="14" fill="#2A221C" stroke="#6C6253" stroke-width="2"/>
+        </g>
+
+        <!-- oars -->
+        <g stroke="#8C8172" stroke-width="2.4" opacity=".85">
+          <path d="M330 256 L300 300"/><path d="M400 258 L372 302"/><path d="M470 260 L444 304"/>
+          <path d="M730 260 L758 304"/><path d="M800 258 L828 302"/><path d="M870 256 L900 300"/>
+        </g>
+
+        <!-- stern curl (left) -->
+        <path d="M250 250 Q214 226 224 192 Q230 168 256 176 Q238 188 250 206" stroke-width="3.2"/>
+
+        <!-- dragon prow (right) -->
+        <path d="M980 250 Q1030 214 1014 168 Q1006 142 1030 130
+                 Q1058 118 1066 142 Q1072 162 1052 168
+                 Q1090 168 1092 140" stroke-width="3.2"/>
+        <path d="M1052 168 Q1078 172 1092 158" stroke-width="2.4"/>
+        <!-- coral dragon eye (single signal on the prow) -->
+        <circle cx="1038" cy="150" r="3.4" fill="var(--accent)" stroke="none"/>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap grid">
+    <div class="brand"><b style="font-family:var(--font-display);letter-spacing:.06em">MISTWALKER</b></div>
+    <small>Built on the <em>Mistwalker</em> prototype · Unity 6 · <span class="tnum">2026</span> · Skál : walk on.</small>
+  </div>
+</footer>
+
+<script>
+const io = new IntersectionObserver((es)=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:0.12, rootMargin:'0px 0px -8% 0px'});
+document.querySelectorAll('.reveal').forEach((el,i)=>{
+  el.style.transitionDelay = Math.min(i%5*70,280)+'ms';
+  io.observe(el);
+});
+</script>
+</body>
+</html>
