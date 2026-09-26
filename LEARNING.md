@@ -141,9 +141,6 @@ isolation. Chasing that taught me a stack of lessons:
 
 - **Scripts must recompile before menu items appear.** Saving the file isn't always
   enough: forcing an asset refresh (Cmd+R) reliably triggers the compile.
-- **iCloud + Unity = conflict copies.** Editing project files on disk while the editor
-  is open spawned `filename 2.cs` duplicates that broke the build. Now I check for
-  ` 2.cs` files after every external edit.
 - **Read the Console, but triage it.** Some errors are harmless and constant (a
   missing `AudioSource` on a zombie, ambisonic‑audio warnings). Learning which
   messages to ignore vs act on is its own skill.
