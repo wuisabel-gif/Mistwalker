@@ -5,8 +5,8 @@
 > the ground. Carry your blade. Hold your lantern. Do not stop walking.*
 
 **Mistwalker** is a third-person survival-horror prototype built in **Unity 6
-(6000.2.12f1)** on the Built-In render pipeline. You play an axe-wielding Viking
-warrior (helm, axe and shield) walking an endless, fog-covered forest while
+(6000.2.12f1)** on the Built-In render pipeline. You play a red-haired Viking
+warrior (sword, axe and shield) walking an endless, fog-covered forest while
 waves of draugr (undead) ambush you. It started as a generic zombie arena and
 is being reworked into a Norse-underworld journey.
 
@@ -43,7 +43,7 @@ is being reworked into a Norse-underworld journey.
 **Run it**
 
 1. Install Unity 6000.2.x through Unity Hub.
-2. `git clone` this repo and add the folder in Unity Hub (**Add → Add project from disk**).
+2. Install [Git LFS](https://git-lfs.com) (the player model is stored with it), then `git clone` this repo and add the folder in Unity Hub (**Add → Add project from disk**).
 3. Let the first import finish. It can take a few minutes.
 4. Open `Assets/Scenes/SampleScene.unity` and press **Play**.
 
@@ -94,7 +94,7 @@ no central game manager. The one exception is `JourneyLedger`, a
  System      │        ▲                                                                   │
              │ FootingProbe (ground raycast)                                              │
              │                                                                            │
- Legacy ───► │ VikingChampion: health, axe strike (OverlapSphere), death                  │
+ Legacy ───► │ VikingChampion: health, sword strike (OverlapSphere), death                │
  Input       └───────────┬──────────────────────────────▲─────────────────────────────────┘
                          │ ReceiveHit(dmg)              │ ReceiveDamage(dmg)
                          ▼                              │
@@ -114,7 +114,7 @@ no central game manager. The one exception is `JourneyLedger`, a
 | --- | --- | --- |
 | `HeroMotionDriver.cs` | ✅ | Main locomotion. Reads the `CharacterControls` action map, drives `CharacterController.Move`, turns toward the move direction with `Quaternion.Slerp`, sets animator params `IsWalking`, `IsRunning`, `isJumping`, `isBasicSlashingTrigger`. Locks movement during the slash until `BasicSlash` reaches 85% normalized time. |
 | `FootingProbe.cs` | ✅ | Downward `Physics.Raycast` (0.45 m, filtered by `groundMask`) exposing `isGrounded`. |
-| `VikingChampion.cs` | ✅ | Player health (120), axe strike, death. On left click it does `Physics.OverlapSphere` at the weapon position and calls `HostileWarrior.ReceiveHit` on every collider tagged `Enemy`. Heals +20 HP each time score passes a multiple of 900. |
+| `VikingChampion.cs` | ✅ | Player health (120), sword strike, death. On left click it does `Physics.OverlapSphere` at the weapon position and calls `HostileWarrior.ReceiveHit` on every collider tagged `Enemy`. Heals +20 HP each time score passes a multiple of 900. |
 | `HostileWarrior.cs` | via prefab | Enemy AI. Moves straight at the player with `Vector3.MoveTowards` (no pathfinding). When in range it attacks on a cooldown and calls `VikingChampion.ReceiveDamage`. On death it awards 125 points and is destroyed after 2.5 s. |
 | `AmbushTrigger.cs` | ✅ ×5 | One-shot trigger volume. When the player enters, it spawns `baseGroupSize + clamp(score / 500, 0, 8)` enemies at random points inside `spawnRadius`. |
 | `JourneyLedger.cs` | ✅ | Singleton for score and kill count. Updates the HUD `Text` and flashes the score color on each kill. |
@@ -187,9 +187,7 @@ Inspector.
 ## Editor Tooling
 
 `Assets/Editor/SwordAttacher.cs` adds a **Tools** menu for fitting the sword to
-the warrior rig. The sword isn't placed in the scene yet (the warrior still
-holds the axe); these tools are for swapping it in.
-
+the warrior rig.
 The rig is awkward: the playable `Warrior (1)` is imported at
 **100× scale** with a `hand.r` bone, and a disabled duplicate `Warrior` still
 carries the legacy `Warrior_RightHand` skeleton.
@@ -218,7 +216,8 @@ Assets/
 ├─ Editor/SwordAttacher.cs       # Tools menu for sword rigging
 ├─ Animation/                    # humanoid clips, BotController / RetargetController
 ├─ PlayerInput.inputactions      # Input System bindings
-├─ Medieval Viking Sword/        # sword model, not used in the scene yet
+├─ Agarkova_CG/                 # red-haired Viking model (Warrior.fbx stored with Git LFS)
+├─ Medieval Viking Sword/        # sword model (in the Viking's right hand)
 └─ Downloaded Assets/            # third-party: AOSFogWar, Warrior Model, NewPunch
                                  #   zombies, Dry_Trees, RockFREE, Fantasy Skybox
 Packages/manifest.json           # package versions
@@ -267,7 +266,8 @@ write-up is in **[LEARNING.md](LEARNING.md)**.
 
 ## Credits
 
-- **Characters and props:** Warrior Model (warrior, axe, shield), Viking Helm (iron variant), Medieval Viking Sword (not yet in scene)
+- **Player character:** *Warrior viking with red hair and armor* by AgarkovaCG
+- **Props:** Medieval Viking Sword; axe and shield from Warrior Model
 - **Fog of war:** *AOS Fog of War*
 - **Enemies and environment:** NewPunch Shirtless Zombie, Dry Trees, RockFREE, Fantasy Skybox FREE
 - **Engine and packages:** Unity, Cinemachine, Input System
