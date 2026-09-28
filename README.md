@@ -231,10 +231,9 @@ ProjectSettings/                 # Unity project settings (editor version pinned
   `com.unity.ai.navigation` is installed but no NavMesh is baked.
 - **`JourneyLedger` persists across scene loads** (`DontDestroyOnLoad`).
   Call `ResetLedger()` when a new run starts.
-- **CI doesn't build the game.** `.github/workflows/dotnet.yml` runs
-  `dotnet build` against Unity's generated `.sln`. That can't compile a Unity
-  project without the Unity Editor. Use [GameCI](https://game.ci) for real
-  builds.
+- **No CI yet.** Nothing checks automatically that the project compiles or its
+  tests pass. [GameCI](https://game.ci) is the usual way to add Unity builds
+  on GitHub Actions.
 
 ---
 
