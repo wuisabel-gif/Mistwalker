@@ -4,138 +4,249 @@
 > forest, and the only road to Valhalla is paved with the draugr you put back in
 > the ground. Carry your blade. Hold your lantern. Do not stop walking.*
 
-**Mistwalker** is a third‑person survival‑horror reimagining built in Unity. It
-centers on a sword-wielding warrior (a sword‑wielding warrior in a dead
-forest stalked by the undead) but reframes it as an atmospheric Norse‑underworld
-journey rather than a generic zombie arena.
+**Mistwalker** is a third-person survival-horror prototype built in **Unity 6
+(6000.2.12f1)** on the Built-In render pipeline. You play a sword-wielding
+warrior walking an endless, fog-covered forest while waves of draugr (undead)
+ambush you. It started as a generic zombie arena and is being reworked into a
+Norse-underworld journey.
 
 ![Mistwalker gameplay in Unity](docs/images/mistwalker-gameplay.png)
 
 ---
 
-## The Idea
+## Contents
 
-You are **Aldric the Oathbroken**: a warrior who died without honor and was denied
-the halls of the slain. Niflheim is an endless, fog‑shrouded forest. The mist is
-alive: it hides the **draugr** (restless Norse dead) and it *remembers* where you
-have been. Banish enough draugr and the fog thins, revealing the next stretch of
-the road toward the bridge to Valhalla.
+- [Quick Start](#quick-start)
+- [Controls](#controls)
+- [Architecture](#architecture)
+- [Gameplay Systems](#gameplay-systems)
+- [Tuning Reference](#tuning-reference)
+- [Editor Tooling](#editor-tooling)
+- [Project Layout](#project-layout)
+- [Known Issues](#known-issues)
+- [Roadmap](#roadmap)
+- [Credits](#credits)
 
-The pillars of the design:
+---
 
-| Pillar | What it means in‑game |
+## Quick Start
+
+**Requirements**
+
+| | |
 | --- | --- |
-| **The Fog Remembers** | A fog‑of‑war system reveals terrain as you explore and re‑darkens areas you abandon: backtracking is never "safe." |
-| **Honor, not Score** | Every draugr banished restores a sliver of honor. Honor is the run currency, the health economy, and the win condition all at once. |
-| **One Good Blade** | No loadouts. A single runic sword. Mastery comes from spacing and timing, not gear. |
-| **The Walk** | There is no map screen. Progress *is* forward motion through the mist. |
+| Unity | 6000.2.12f1 (any 6000.2.x should work) |
+| Render pipeline | Built-In |
 
-> Mistwalker is the creative direction layered on top of the scene and systems.
+**Run it**
 
----
+1. Install Unity 6000.2.x through Unity Hub.
+2. `git clone` this repo and add the folder in Unity Hub (**Add → Add project from disk**).
+3. Let the first import finish. It can take a few minutes.
+4. Open `Assets/Scenes/SampleScene.unity` and press **Play**.
 
-## Core Loop
+**Package dependencies** (from `Packages/manifest.json`)
 
-1. **Walk** into the fog. Terrain and threats reveal as you advance.
-2. **Fight** the draugr that emerge: read the wind‑up, close the gap, strike.
-3. **Banish** them to restore honor and thin the surrounding mist.
-4. **Survive** long enough to reach the next clearing; repeat, deeper and darker.
+| Package | Version | Used for |
+| --- | --- | --- |
+| `com.unity.inputsystem` | 1.14.2 | Player movement, run, jump, slash |
+| `com.unity.cinemachine` | 3.1.7 | Third-person follow camera |
+| `com.unity.ai.navigation` | 2.0.13 | Installed, not used by gameplay yet |
+| `com.unity.timeline` | 1.8.9 | Installed, not used by gameplay yet |
+| `com.unity.test-framework` | 1.6.0 | No tests yet |
 
----
-
-## Features (current + planned)
-
-- ⚔️ **Melee combat**: a single Viking sword bound to the warrior's hand bone, with
-  hit detection driven by the `PlayerController` attack logic.
-- 🌫️ **Dynamic fog of war**: `FogWar` reveals/conceals the world around the player.
-- 🧟 **Roaming undead**: `Enemy`‑driven draugr (built on the project's existing
-  zombie actors) that hunt the player through the trees.
-- 🎥 **Cinemachine camera**: a follow‑cam (`CM vcam1`) framing the walk.
-- ❤️ **Health / honor UI**: `HealthBarManager` and `ScoreManager` track survival.
-- 🌲 **Hand‑built forest terrain**: multiple stitched terrain tiles form the misted woods.
-
-> *Planned:* lantern light radius, draugr "banish" finisher, fog‑thinning progression
-> gate, ambient Norse score.
+`Active Input Handling` is set to **Both**. The project needs this because some
+scripts use the new Input System and others use the legacy `UnityEngine.Input`
+API (see [Known Issues](#known-issues)).
 
 ---
 
 ## Controls
 
-| Action | Input |
+Bindings live in `Assets/PlayerInput.inputactions` (action map `CharacterControls`).
+The C# wrapper `Assets/Scripts/PlayerInput.cs` is auto-generated from it. Don't
+edit it by hand.
+
+| Action | Keyboard / Mouse | Gamepad |
+| --- | --- | --- |
+| Move | `W` `A` `S` `D` | Left Stick |
+| Run (hold) | `Left Shift` | Left Shoulder |
+| Jump | `Space` | South button (A / Cross) |
+| Basic Slash | Left Mouse | West button (X / Square) |
+
+---
+
+## Architecture
+
+The game runs on plain `MonoBehaviour` components wired in the scene. There is
+no central game manager. The one exception is `JourneyLedger`, a
+`DontDestroyOnLoad` singleton that holds score.
+
+```
+             ┌──────────────────────── Player ("Player" tag) ─────────────────────────┐
+ Input  ───► │ HeroMotionDriver ──► CharacterController + Animator (walk/run/jump/slash) │
+ System      │        ▲                                                                   │
+             │ FootingProbe (ground raycast)                                              │
+             │                                                                            │
+ Legacy ───► │ VikingChampion: health, sword strike (OverlapSphere), death               │
+ Input       └───────────┬──────────────────────────────▲─────────────────────────────────┘
+                         │ ReceiveHit(dmg)              │ ReceiveDamage(dmg)
+                         ▼                              │
+            HostileWarrior ("Enemy" tag): chase, melee, die ──► JourneyLedger.AwardEnemyDefeat(125)
+                         ▲                                              │
+            AmbushTrigger: spawns HostileWarrior groups,               ├──► score / kill HUD (UI Text)
+                           size scales with score  ◄── GetScore() ─────┘
+                                                                        
+            VitalityDisplay ◄── reads VikingChampion.currentHealth every frame (health bar)
+            PathTileCycler  ◄── reads player.z, recycles terrain tiles (endless forest)
+            csFogWar (AOS Fog of War asset): fog-of-war plane around the player
+```
+
+### Script reference (`Assets/Scripts/`)
+
+| Script | In scene | Role |
+| --- | --- | --- |
+| `HeroMotionDriver.cs` | ✅ | Main locomotion. Reads the `CharacterControls` action map, drives `CharacterController.Move`, turns toward the move direction with `Quaternion.Slerp`, sets animator params `IsWalking`, `IsRunning`, `isJumping`, `isBasicSlashingTrigger`. Locks movement during the slash until `BasicSlash` reaches 85% normalized time. |
+| `FootingProbe.cs` | ✅ | Downward `Physics.Raycast` (0.45 m, filtered by `groundMask`) exposing `isGrounded`. |
+| `VikingChampion.cs` | ✅ | Player health (120), sword strike, death. On left click it does `Physics.OverlapSphere` at the weapon position and calls `HostileWarrior.ReceiveHit` on every collider tagged `Enemy`. Heals +20 HP each time score passes a multiple of 900. |
+| `HostileWarrior.cs` | via prefab | Enemy AI. Moves straight at the player with `Vector3.MoveTowards` (no pathfinding). When in range it attacks on a cooldown and calls `VikingChampion.ReceiveDamage`. On death it awards 125 points and is destroyed after 2.5 s. |
+| `AmbushTrigger.cs` | ✅ ×5 | One-shot trigger volume. When the player enters, it spawns `baseGroupSize + clamp(score / 500, 0, 8)` enemies at random points inside `spawnRadius`. |
+| `JourneyLedger.cs` | ✅ | Singleton for score and kill count. Updates the HUD `Text` and flashes the score color on each kill. |
+| `VitalityDisplay.cs` | ✅ | Health bar. Sets `Image.fillAmount` and color: green above 65%, amber above 35%, red otherwise. |
+| `PathTileCycler.cs` | ✅ | Endless-terrain treadmill. Keeps a ring buffer of `Terrain` tiles along +Z. When the player gets `bufferTiles × tileLength` past the rear tile, that tile moves to the front (and the reverse when walking back). |
+| `BlendTreeMotionDriver.cs` | — | Experimental 2D blend-tree driver (`VelocityX` / `VelocityZ`). Not used. |
+| `SimpleMotionAnimator.cs` | — | Experimental 1D blend-tree driver (`Velocity`). Not used. |
+| `PlayerInput.cs` | — | Generated Input System wrapper. |
+
+---
+
+## Gameplay Systems
+
+### Combat loop
+
+1. The player walks into an `AmbushTrigger` collider, which fires once per trigger.
+2. A group of `HostileWarrior`s spawns. Group size grows by 1 for every 500
+   points, up to +8.
+3. Each enemy chases the player and hits for 12 damage every 1.25 s once within
+   1.6 m.
+4. The player's slash does 9 damage in a 2.2 m sphere and has a 1.6 s cooldown.
+   An enemy with 45 HP takes 5 hits.
+5. Each kill gives +125 score. Every 900 score heals the player +20 HP.
+
+### Jump physics
+
+`HeroMotionDriver` computes gravity and initial velocity from the jump height
+and duration you want:
+
+```
+timeToApex          = maxJumpTime / 2
+gravity             = -2 · maxJumpHeight / timeToApex²
+initialJumpVelocity =  2 · maxJumpHeight / timeToApex
+```
+
+Gravity is doubled on the way down (`fallMultiplier = 2`) so the fall feels
+snappier. Velocity is integrated with a velocity-Verlet style average
+`(v_prev + v_new) / 2`, which keeps jump arcs more consistent across frame rates.
+
+### Endless forest
+
+`PathTileCycler` recycles a fixed pool of terrain tiles instead of streaming
+new ones, so memory use stays flat no matter how far you walk. The pool must be
+in travel order in the `tiles` array, and each tile must be exactly
+`tileLength` long on Z.
+
+### Fog of war
+
+This uses the third-party **AOS Fog of War** asset
+(`Assets/Downloaded Assets/AOSFogWar/csFogWar.cs`). See the PDF in that folder
+for its configuration.
+
+---
+
+## Tuning Reference
+
+These are the script defaults. Scene or prefab overrides take precedence in the
+Inspector.
+
+| Component | Field | Default |
+| --- | --- | --- |
+| `VikingChampion` | `maxHealth` / `strikePower` / `strikeRadius` / `strikeDelay` | 120 / 9 / 2.2 m / 1.6 s |
+| `HostileWarrior` | `health` / `pursuitSpeed` / `meleeDistance` / `hitStrength` / `attackInterval` | 45 / 2.35 m/s / 1.6 m / 12 / 1.25 s |
+| `AmbushTrigger` | `baseGroupSize` / `spawnRadius` | 2 / 14 m |
+| `HeroMotionDriver` | `walkSpeed` / `runMultiplier` / `maxJumpHeight` / `maxJumpTime` | 1.0 / 3.0× / 1.0 m / 0.5 s |
+| `PathTileCycler` | `tileLength` / `bufferTiles` | 100 m / 2 |
+
+---
+
+## Editor Tooling
+
+`Assets/Editor/SwordAttacher.cs` adds a **Tools** menu for fitting the sword to
+the warrior rig. The rig is awkward: the playable `Warrior (1)` is imported at
+**100× scale** with a `hand.r` bone, and a disabled duplicate `Warrior` still
+carries the legacy `Warrior_RightHand` skeleton.
+
+| Menu item | What it does |
 | --- | --- |
-| Move | WASD / Left Stick |
-| Look / Aim camera | Mouse / Right Stick |
-| Attack | Left Mouse / Right Trigger |
-| (Planned) Raise lantern | Right Mouse / Left Trigger |
+| **Attach To Active Hand** | Instantiates or re-parents the sword under the active `hand.r` bone. |
+| **Normalize Sword Scale** | Cancels the 100× bone scale so the blade is about 0.8 m. |
+| **Sword Local Rot +X90 / +Y90 / +Z90** | Rotates the blade's local orientation in 90° steps. |
+| **Match Axe (…)** | Copies the original axe's local transform, with optional spin. |
+| **Map Warriors / List Warrior1 Hand Bones / Trace Active Chain** | Diagnostics for the two-skeleton setup. |
+| **Report Sword Size / Diagnose Placement** | Logs world-space bounds and parent chain. |
+| **Highlight Sword / Test Cube At Hand** | Visual debugging aids. |
 
-> Input is handled through Unity's **Input System** package.
-
----
-
-## Tech Stack
-
-- **Engine:** Unity **6000.2.12f1** (project originally authored in 2022.1, auto‑upgraded)
-- **Render pipeline:** Built‑In
-- **Camera:** Cinemachine
-- **Input:** Unity Input System
-- **Language:** C#
+This is editor-only code under an `Editor/` folder, so it is never included in
+player builds.
 
 ---
 
-## Getting Started
-
-1. Install **Unity 6 (6000.2.x)** via Unity Hub.
-2. Clone / open this folder as a Unity project.
-3. Open the main scene: `Assets/Scenes/SampleScene.unity`.
-4. Press **Play**
-   
----
-
-## Project Structure
+## Project Layout
 
 ```
 Assets/
-├─ Scenes/
-│  └─ SampleScene.unity        # main playable scene (the misted forest)
-├─ Scripts/
-│  ├─ PlayerController.cs       # movement, attack, weapon hit detection
-│  ├─ Enemy.cs                  # draugr behaviour
-│  ├─ ScoreManager.cs           # honor / score tracking
-│  └─ ...
-├─ Editor/
-│  └─ SwordAttacher.cs          # dev tooling: see below
-├─ Medieval Viking Sword/       # the runic blade asset (Built‑In / URP / HDRP variants)
-└─ ...
+├─ Scenes/SampleScene.unity      # the playable scene + 8 TerrainData tiles
+├─ Scripts/                      # gameplay code (see Script reference)
+├─ Editor/SwordAttacher.cs       # Tools menu for sword rigging
+├─ Animation/                    # humanoid clips, BotController / RetargetController
+├─ PlayerInput.inputactions      # Input System bindings
+├─ Medieval Viking Sword/        # sword model (Built-In / URP / HDRP variants)
+└─ Downloaded Assets/            # third-party: AOSFogWar, Warrior Model, NewPunch
+                                 #   zombies, Dry_Trees, RockFREE, Fantasy Skybox
+Packages/manifest.json           # package versions
+ProjectSettings/                 # Unity project settings (editor version pinned here)
 ```
 
 ---
 
-## Dev Tooling: `Tools` menu
+## Known Issues
 
-`Assets/Editor/SwordAttacher.cs` adds a **Tools** menu in the Unity Editor for
-fitting the sword to the warrior's rig. It exists because the playable warrior
-(`Warrior (1)`) is rigged at **100× scale** with bones named `hand.r`, while a
-*disabled* duplicate (`Warrior`) carries the legacy `Warrior_RightHand` skeleton : 
-so weapons have to be parented and scaled carefully.
-
-Most‑used commands:
-
-- **Attach To Active Hand**: instantiates / re‑parents the sword onto the *active*
-  `hand.r` bone so it actually renders and animates.
-- **Normalize Sword Scale**: counters the 100× bone scale so the blade is ~0.8 m.
-- **Sword Local Rot +X90 / +Y90 / +Z90**: nudge the blade's orientation in 90° steps.
-- **Map Warriors / List Warrior1 Hand Bones**: diagnostics for the dual‑skeleton setup.
-
-> This tooling is for development convenience and can be removed from a shipping build.
+- **Two movement paths on the player.** `HeroMotionDriver` moves the
+  `CharacterController` through the Input System. `VikingChampion` also calls
+  `transform.Translate` from legacy `Input.GetAxis`. With both enabled, WASD
+  moves the player twice.
+- **Attack isn't tied to the animation.** `VikingChampion` applies damage right
+  away on mouse down. It is not driven by an animation event, and its cooldown
+  is separate from `HeroMotionDriver`'s slash lock.
+- **Enemies ignore obstacles.** `HostileWarrior` moves in a straight line.
+  `com.unity.ai.navigation` is installed but no NavMesh is baked.
+- **`JourneyLedger` persists across scene loads** (`DontDestroyOnLoad`).
+  Call `ResetLedger()` when a new run starts.
+- **CI doesn't build the game.** `.github/workflows/dotnet.yml` runs
+  `dotnet build` against Unity's generated `.sln`. That can't compile a Unity
+  project without the Unity Editor. Use [GameCI](https://game.ci) for real
+  builds.
 
 ---
 
 ## Roadmap
 
-- [ ] Lantern light + darkness pressure
-- [ ] Draugr banish finisher and banish VFX
-- [ ] Fog‑thinning progression gate between clearings
-- [ ] Honor‑as‑health economy
+- [ ] Merge player movement into `HeroMotionDriver`; keep `VikingChampion` for health and combat only
+- [ ] Apply damage from an animation event on the `BasicSlash` clip
+- [ ] NavMesh-based draugr pursuit
+- [ ] Lantern light radius and darkness pressure
+- [ ] Draugr banish finisher and VFX
+- [ ] Fog thinning that gates progress between clearings
+- [ ] Honor-as-health economy (combine score and HP)
 - [ ] Ambient Norse soundscape
 - [ ] Boss: the **Warden of the Bridge**
 
@@ -143,17 +254,18 @@ Most‑used commands:
 
 ## Lessons Learned
 
-Building this taught a lot of core Unity the hard way: prefabs, bone parenting,
-local vs world space, active‑state inheritance, import scale, and editor scripting.
-The full write‑up lives in **[LEARNING.md](LEARNING.md)**.
+Building this was a crash course in prefabs, bone parenting, local vs. world
+space, active-state inheritance, import scale, and editor scripting. The full
+write-up is in **[LEARNING.md](LEARNING.md)**.
 
 ---
 
 ## Credits
 
-- **Sword:** *Medieval Viking Sword* asset pack (3D Props / Weapons).
-- **Engine & systems:** Unity, Cinemachine, Input System.
-- Built as a Unity prototype for *Mistwalker*.
+- **Sword:** *Medieval Viking Sword* asset pack
+- **Fog of war:** *AOS Fog of War*
+- **Characters and environment:** Warrior Model, NewPunch Shirtless Zombie, Dry Trees, RockFREE, Fantasy Skybox FREE
+- **Engine and packages:** Unity, Cinemachine, Input System
 
 ---
 
