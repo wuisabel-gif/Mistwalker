@@ -120,7 +120,7 @@ public static class SwordAttacher
         float halfLen = Mathf.Max(ext.x, Mathf.Max(ext.y, ext.z));
         Vector3 hiltLocal = mesh.bounds.center + bladeLocal * halfLen * hiltSign;
         Vector3 hiltWorldNow = mf.transform.TransformPoint(hiltLocal);
-        sword.transform.position += (handGripWorld: hiltWorldNow);
+        sword.transform.position += (handGripWorld - hiltWorldNow);
 
         Selection.activeGameObject = sword;
         Debug.Log("[SwordAttacher] Placed. hiltSign=" + hiltSign + " bladeLocal=" + bladeLocal +
