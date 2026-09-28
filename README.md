@@ -115,7 +115,7 @@ no central game manager. The one exception is `JourneyLedger`, a
 | `HeroMotionDriver.cs` | ✅ | Main locomotion. Reads the `CharacterControls` action map, drives `CharacterController.Move`, turns toward the move direction with `Quaternion.Slerp`, sets animator params `IsWalking`, `IsRunning`, `isJumping`, `isBasicSlashingTrigger`. Locks movement during the slash until `BasicSlash` reaches 85% normalized time. |
 | `FootingProbe.cs` | ✅ | Downward `Physics.Raycast` (0.45 m, filtered by `groundMask`) exposing `isGrounded`. |
 | `VikingChampion.cs` | ✅ | Player health (120), sword strike, death. On left click it does `Physics.OverlapSphere` at the weapon position and calls `HostileWarrior.ReceiveHit` on every collider tagged `Enemy`. Heals +20 HP each time score passes a multiple of 900. |
-| `HostileWarrior.cs` | via prefab | Enemy AI. Moves straight at the player with `Vector3.MoveTowards` (no pathfinding). When in range it attacks on a cooldown and calls `VikingChampion.ReceiveDamage`. On death it awards 125 points and is destroyed after 2.5 s. |
+| `HostileWarrior.cs` | via `Draugr.prefab` | Enemy AI. Moves straight at the player with `Vector3.MoveTowards` (no pathfinding). When in range it attacks on a cooldown and calls `VikingChampion.ReceiveDamage`. On death it awards 125 points and is destroyed after 2.5 s. |
 | `AmbushTrigger.cs` | ✅ ×5 | One-shot trigger volume. When the player enters, it spawns `baseGroupSize + clamp(score / 500, 0, 8)` enemies at random points inside `spawnRadius`. |
 | `JourneyLedger.cs` | ✅ | Singleton for score and kill count. Updates the HUD `Text` and flashes the score color on each kill. |
 | `VitalityDisplay.cs` | ✅ | Health bar. Sets `Image.fillAmount` and color: green above 65%, amber above 35%, red otherwise. |
@@ -218,8 +218,9 @@ Assets/
 ├─ PlayerInput.inputactions      # Input System bindings
 ├─ Agarkova_CG/                 # red-haired Viking model (Warrior.fbx stored with Git LFS)
 ├─ Medieval Viking Sword/        # sword model (in the Viking's right hand)
-└─ Downloaded Assets/            # third-party: AOSFogWar, Warrior Model, NewPunch
-                                 #   zombies, Dry_Trees, RockFREE, Fantasy Skybox
+├─ Creep Horror Creature/        # draugr enemy (Prefabs/Draugr.prefab, DraugrController)
+└─ Downloaded Assets/            # third-party: AOSFogWar, Warrior Model (axe, shield),
+                                 #   Dry_Trees, RockFREE, Fantasy Skybox
 Packages/manifest.json           # package versions
 ProjectSettings/                 # Unity project settings (editor version pinned here)
 ```
@@ -269,7 +270,8 @@ write-up is in **[LEARNING.md](LEARNING.md)**.
 - **Player character:** *Warrior viking with red hair and armor* by AgarkovaCG
 - **Props:** Medieval Viking Sword; axe and shield from Warrior Model
 - **Fog of war:** *AOS Fog of War*
-- **Enemies and environment:** NewPunch Shirtless Zombie, Dry Trees, RockFREE, Fantasy Skybox FREE
+- **Enemy:** *Creep Horror Creature* by AC Game Assets
+- **Environment:** Dry Trees, RockFREE, Fantasy Skybox FREE
 - **Engine and packages:** Unity, Cinemachine, Input System
 
 ---

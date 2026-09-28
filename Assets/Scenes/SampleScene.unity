@@ -7943,7 +7943,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 512ce3fc32b63de4badd4a9962491cc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefab: {fileID: 4127960938634840145, guid: a5295e78cd3f41f4d9ccd1f82ccb9e0e, type: 3}
+  enemyPrefab: {fileID: 2508634732772715332, guid: eee9bb4f8b30543089c76c01d1ebac65, type: 3}
   baseGroupSize: 2
   spawnRadius: 14
   spawnedInThisZone: 0
@@ -8383,7 +8383,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 512ce3fc32b63de4badd4a9962491cc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefab: {fileID: 4127960938634840145, guid: a5295e78cd3f41f4d9ccd1f82ccb9e0e, type: 3}
+  enemyPrefab: {fileID: 2508634732772715332, guid: eee9bb4f8b30543089c76c01d1ebac65, type: 3}
   baseGroupSize: 2
   spawnRadius: 14
   spawnedInThisZone: 0
@@ -8780,7 +8780,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 512ce3fc32b63de4badd4a9962491cc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefab: {fileID: 4127960938634840145, guid: a5295e78cd3f41f4d9ccd1f82ccb9e0e, type: 3}
+  enemyPrefab: {fileID: 2508634732772715332, guid: eee9bb4f8b30543089c76c01d1ebac65, type: 3}
   baseGroupSize: 2
   spawnRadius: 14
   spawnedInThisZone: 0
@@ -9893,7 +9893,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 512ce3fc32b63de4badd4a9962491cc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefab: {fileID: 4127960938634840145, guid: a5295e78cd3f41f4d9ccd1f82ccb9e0e, type: 3}
+  enemyPrefab: {fileID: 2508634732772715332, guid: eee9bb4f8b30543089c76c01d1ebac65, type: 3}
   baseGroupSize: 2
   spawnRadius: 14
   spawnedInThisZone: 0
@@ -13062,7 +13062,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 512ce3fc32b63de4badd4a9962491cc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyPrefab: {fileID: 4127960938634840145, guid: a5295e78cd3f41f4d9ccd1f82ccb9e0e, type: 3}
+  enemyPrefab: {fileID: 2508634732772715332, guid: eee9bb4f8b30543089c76c01d1ebac65, type: 3}
   baseGroupSize: 2
   spawnRadius: 14
   spawnedInThisZone: 0
