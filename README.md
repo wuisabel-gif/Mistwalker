@@ -12,6 +12,8 @@ Norse-underworld journey.
 
 ![Mistwalker gameplay in Unity](docs/images/mistwalker-gameplay.png)
 
+**▶ Play in your browser:** https://wuisabel-gif.github.io/Mistwalker/
+
 ---
 
 ## Contents
@@ -44,6 +46,10 @@ Norse-underworld journey.
 2. `git clone` this repo and add the folder in Unity Hub (**Add → Add project from disk**).
 3. Let the first import finish. It can take a few minutes.
 4. Open `Assets/Scenes/SampleScene.unity` and press **Play**.
+
+**CI:** `.github/workflows/unity.yml` uses [GameCI](https://game.ci) to build the
+WebGL player on every push and pull request, which also checks that the project
+compiles. Pushes to `main` deploy it to GitHub Pages.
 
 **Package dependencies** (from `Packages/manifest.json`)
 
@@ -231,9 +237,6 @@ ProjectSettings/                 # Unity project settings (editor version pinned
   `com.unity.ai.navigation` is installed but no NavMesh is baked.
 - **`JourneyLedger` persists across scene loads** (`DontDestroyOnLoad`).
   Call `ResetLedger()` when a new run starts.
-- **No CI yet.** Nothing checks automatically that the project compiles or its
-  tests pass. [GameCI](https://game.ci) is the usual way to add Unity builds
-  on GitHub Actions.
 
 ---
 
