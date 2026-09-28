@@ -6,7 +6,7 @@
 
 **Mistwalker** is a third-person survival-horror prototype built in **Unity 6
 (6000.2.12f1)** on the Built-In render pipeline. You play a red-haired Viking
-warrior (sword, axe and shield) walking an endless, fog-covered forest while
+warrior (sword and shield) walking an endless, fog-covered forest while
 waves of draugr (undead) ambush you. It started as a generic zombie arena and
 is being reworked into a Norse-underworld journey.
 
@@ -219,7 +219,7 @@ Assets/
 ├─ Agarkova_CG/                 # red-haired Viking model (Warrior.fbx stored with Git LFS)
 ├─ Medieval Viking Sword/        # sword model (in the Viking's right hand)
 ├─ Creep Horror Creature/        # draugr enemy (Prefabs/Draugr.prefab, DraugrController)
-└─ Downloaded Assets/            # third-party: AOSFogWar, Warrior Model (axe, shield),
+└─ Downloaded Assets/            # third-party: AOSFogWar, Warrior Model (shield),
                                  #   Dry_Trees, RockFREE, Fantasy Skybox
 Packages/manifest.json           # package versions
 ProjectSettings/                 # Unity project settings (editor version pinned here)
@@ -268,7 +268,7 @@ write-up is in **[LEARNING.md](LEARNING.md)**.
 ## Credits
 
 - **Player character:** *Warrior viking with red hair and armor* by AgarkovaCG
-- **Props:** Medieval Viking Sword; axe and shield from Warrior Model
+- **Props:** Medieval Viking Sword; shield from Warrior Model
 - **Fog of war:** *AOS Fog of War*
 - **Enemy:** *Creep Horror Creature* by AC Game Assets
 - **Environment:** Dry Trees, RockFREE, Fantasy Skybox FREE
