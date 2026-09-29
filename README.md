@@ -214,7 +214,7 @@ Assets/
 ├─ Scenes/SampleScene.unity      # the playable scene + 8 TerrainData tiles
 ├─ Scripts/                      # gameplay code (see Script reference)
 ├─ Editor/SwordAttacher.cs       # Tools menu for sword rigging
-├─ Animation/                    # humanoid clips, BotController / RetargetController
+├─ Animation/                    # humanoid clips + BotController (player animations)
 ├─ PlayerInput.inputactions      # Input System bindings
 ├─ Agarkova_CG/                 # red-haired Viking model (Warrior.fbx stored with Git LFS)
 ├─ Medieval Viking Sword/        # sword model (in the Viking's right hand)
