@@ -124,6 +124,7 @@ scene singleton that holds score (reset on restart).
 | `JourneyLedger.cs` | ✅ | Singleton for score and kill count. Updates the HUD `Text` and flashes the score color on each kill. |
 | `VitalityDisplay.cs` | ✅ | Health bar. Sets `Image.fillAmount` and color: green above 65%, amber above 35%, red otherwise. |
 | `PathTileCycler.cs` | ✅ | Endless-terrain treadmill. Keeps a ring buffer of `Terrain` tiles along +Z. When the player gets `bufferTiles × tileLength` past the rear tile, that tile moves to the front (and the reverse when walking back). |
+| `SpiritGuide.cs` | spawns itself | Friendly NPC: a glowing wisp placed 6 m ahead of the player at every scene load. When the player comes within 6 m it speaks four lines of lore as subtitles, once per run. Spawns from code (`RuntimeInitializeOnLoadMethod` + `sceneLoaded`), so it needs no scene setup. |
 | `BlendTreeMotionDriver.cs` | — | Experimental 2D blend-tree driver (`VelocityX` / `VelocityZ`). Not used. |
 | `SimpleMotionAnimator.cs` | — | Experimental 1D blend-tree driver (`Velocity`). Not used. |
 | `PlayerInput.cs` | — | Generated Input System wrapper. |
@@ -148,6 +149,7 @@ scene singleton that holds score (reset on restart).
    `PlayerPrefs`); press **R** to restart.
 
 The player carries a flickering **lantern** (warm point light, 9 m range).
+A **spirit guide** wisp waits just ahead at the start of each run and speaks a few lines of lore when you approach.
 
 ### Jump physics
 
