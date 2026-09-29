@@ -14,6 +14,10 @@ is being reworked into a Norse-underworld journey.
 
 **▶ Play in your browser:** https://wuisabel-gif.github.io/Mistwalker/
 
+**▶ Watch the gameplay video (Devlog #01 — The Beginning):** https://youtu.be/ppviGYgkYso
+
+[![Mistwalker Devlog #01 — The Beginning](docs/images/devlog-01-thumbnail.jpg)](https://youtu.be/ppviGYgkYso)
+
 ---
 
 ## Contents
