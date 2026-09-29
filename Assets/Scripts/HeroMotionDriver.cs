@@ -8,6 +8,7 @@ public class HeroMotionDriver : MonoBehaviour
 {
     PlayerInput playerInput;
     CharacterController characterController;
+    VikingChampion champion;
     Animator animator;
     
     int IsWalkingHash;
@@ -48,6 +49,7 @@ public class HeroMotionDriver : MonoBehaviour
         walkMultiplier = walkSpeed;
         playerInput = new PlayerInput();
         characterController = GetComponent<CharacterController>();
+        champion = GetComponent<VikingChampion>();
         animator = GetComponent<Animator>();
 
         IsWalkingHash = Animator.StringToHash("IsWalking");
@@ -97,6 +99,9 @@ public class HeroMotionDriver : MonoBehaviour
         // {
         //     isBasicSlashing = false;
         // }
+        if (isBasicSlashPressed && champion != null && champion.BladeBlocked())
+            isBasicSlashPressed = false; // a tree is in the way; don't swing through it
+
         if (characterController.isGrounded && isBasicSlashPressed && !isBasicSlashing)
         {
             animator.SetTrigger("isBasicSlashingTrigger");

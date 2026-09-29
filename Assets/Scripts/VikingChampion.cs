@@ -19,6 +19,12 @@ public class VikingChampion : MonoBehaviour
     public int strikePower = 9;
     [FormerlySerializedAs("attackCooldown")]
     public float strikeDelay = 1.6f;
+    [Tooltip("Degrees in front of the champion the swing covers.")]
+    public float strikeArc = 100f;
+    [Tooltip("How far the blade reaches from the chest; trees closer than this block the swing.")]
+    public float bladeReach = 1.2f;
+
+    const float ChestHeight = 1.2f;
 
     [Header("Axe Audio")]
     [FormerlySerializedAs("audioSource")]
@@ -98,16 +104,39 @@ public class VikingChampion : MonoBehaviour
 
         weapon.SetActive(true);
 
-        Collider[] targets = Physics.OverlapSphere(weapon.transform.position, strikeRadius);
+        if (BladeBlocked())
+            return;
+
+        Vector3 chest = transform.position + Vector3.up * ChestHeight;
+        Collider[] targets = Physics.OverlapSphere(transform.position, strikeRadius);
         foreach (Collider target in targets)
         {
             if (!target.CompareTag("Enemy"))
+                continue;
+
+            // Only what the champion is facing, and nothing hidden behind a tree.
+            Vector3 toTarget = target.transform.position - transform.position;
+            toTarget.y = 0f;
+            if (Vector3.Angle(transform.forward, toTarget) > strikeArc * 0.5f)
+                continue;
+            if (Physics.Linecast(chest, target.bounds.center, out RaycastHit hit, ~0, QueryTriggerInteraction.Ignore)
+                && hit.collider != target && !hit.transform.IsChildOf(transform))
                 continue;
 
             HostileWarrior foe = target.GetComponent<HostileWarrior>();
             if (foe != null)
                 foe.ReceiveHit(strikePower);
         }
+    }
+
+    // True when something solid (a tree) sits within sword reach in front, so a swing would pass through it.
+    public bool BladeBlocked()
+    {
+        Vector3 chest = transform.position + Vector3.up * ChestHeight;
+        foreach (RaycastHit hit in Physics.SphereCastAll(chest, 0.15f, transform.forward, bladeReach, ~0, QueryTriggerInteraction.Ignore))
+            if (!hit.collider.CompareTag("Enemy") && !hit.transform.IsChildOf(transform) && !(hit.collider is TerrainCollider))
+                return true;
+        return false;
     }
 
     public void ReceiveDamage(int amount)
