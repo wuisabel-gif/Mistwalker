@@ -91,6 +91,10 @@ public class HostileWarrior : MonoBehaviour
         if (JourneyLedger.Instance != null)
             JourneyLedger.Instance.AwardEnemyDefeat(125);
 
+        VikingChampion champion = hero != null ? hero.GetComponent<VikingChampion>() : null;
+        if (champion != null)
+            champion.Heal(champion.healPerKill);
+
         Destroy(gameObject, 2.5f);
     }
 }

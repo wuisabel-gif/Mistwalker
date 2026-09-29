@@ -26,6 +26,13 @@ public class VikingChampion : MonoBehaviour
 
     const float ChestHeight = 1.2f;
 
+    [Header("Recovery")]
+    [Tooltip("HP restored for each enemy killed.")]
+    public int healPerKill = 15;
+    [Tooltip("Seconds without taking damage before health starts coming back.")]
+    public float regenDelay = 4f;
+    public float regenPerSecond = 5f;
+
     [Header("Axe Audio")]
     [FormerlySerializedAs("audioSource")]
     public AudioSource swingSource;
@@ -43,6 +50,8 @@ public class VikingChampion : MonoBehaviour
     private float nextStrikeTime;
     private int rewardedTier;
     private bool defeated;
+    private float lastHurtTime = -999f;
+    private float regenBuffer;
 
     void Awake()
     {
@@ -61,6 +70,7 @@ public class VikingChampion : MonoBehaviour
 
         ApplyKeyboardMovement();
         RefreshScoreReward();
+        Regenerate();
 
         if (Input.GetMouseButtonDown(0) && Time.time >= nextStrikeTime)
         {
@@ -139,11 +149,35 @@ public class VikingChampion : MonoBehaviour
         return false;
     }
 
+    // Out of combat for a while: health trickles back.
+    void Regenerate()
+    {
+        if (currentHealth >= maxHealth || Time.time - lastHurtTime < regenDelay)
+        {
+            regenBuffer = 0f;
+            return;
+        }
+
+        regenBuffer += regenPerSecond * Time.deltaTime;
+        int whole = Mathf.FloorToInt(regenBuffer);
+        regenBuffer -= whole;
+        Heal(whole);
+    }
+
+    public void Heal(int amount)
+    {
+        if (defeated || amount <= 0)
+            return;
+
+        currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
+    }
+
     public void ReceiveDamage(int amount)
     {
         if (defeated)
             return;
 
+        lastHurtTime = Time.time;
         currentHealth = Mathf.Max(0, currentHealth - amount);
 
         if (currentHealth == 0)
