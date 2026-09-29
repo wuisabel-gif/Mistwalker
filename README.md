@@ -90,7 +90,7 @@ edit it by hand.
 
 The game runs on plain `MonoBehaviour` components wired in the scene. There is
 no central game manager. The one exception is `JourneyLedger`, a
-`DontDestroyOnLoad` singleton that holds score.
+scene singleton that holds score (reset on restart).
 
 ```
              ┌──────────────────────── Player ("Player" tag) ─────────────────────────┐
@@ -136,12 +136,18 @@ no central game manager. The one exception is `JourneyLedger`, a
 
 1. The player walks into an `AmbushTrigger` collider, which fires once per trigger.
 2. A group of `HostileWarrior`s spawns. Group size grows by 1 for every 500
-   points, up to +8.
+   points, up to +8. About 30% are **runners**: 0.8× size, 1.6× speed, 60% health.
 3. Each enemy chases the player and hits for 12 damage every 1.25 s once within
    1.6 m.
-4. The player's slash does 9 damage in a 2.2 m sphere and has a 1.6 s cooldown.
-   An enemy with 45 HP takes 5 hits.
-5. Each kill gives +125 score. Every 900 score heals the player +20 HP.
+4. The player's slash does 9 damage to enemies **in front** (100° arc, 2.2 m) and
+   has a 1.6 s cooldown. Trees block hits, and the swing is cancelled if a trunk is
+   within blade reach (1.2 m). An enemy with 45 HP takes 5 hits.
+5. Each kill gives +125 score and **heals +15 HP**. After 4 s without taking
+   damage the player regenerates 5 HP/s. Every 900 score also heals +20 HP.
+6. On death, a "You have fallen" screen shows the score and best score (saved in
+   `PlayerPrefs`); press **R** to restart.
+
+The player carries a flickering **lantern** (warm point light, 9 m range).
 
 ### Jump physics
 
@@ -242,8 +248,6 @@ ProjectSettings/                 # Unity project settings (editor version pinned
   is separate from `HeroMotionDriver`'s slash lock.
 - **Enemies ignore obstacles.** `HostileWarrior` moves in a straight line.
   `com.unity.ai.navigation` is installed but no NavMesh is baked.
-- **`JourneyLedger` persists across scene loads** (`DontDestroyOnLoad`).
-  Call `ResetLedger()` when a new run starts.
 
 ---
 
@@ -252,7 +256,8 @@ ProjectSettings/                 # Unity project settings (editor version pinned
 - [ ] Merge player movement into `HeroMotionDriver`; keep `VikingChampion` for health and combat only
 - [ ] Apply damage from an animation event on the `BasicSlash` clip
 - [ ] NavMesh-based draugr pursuit
-- [ ] Lantern light radius and darkness pressure
+- [x] Lantern light
+- [ ] Darkness pressure (lantern fuel / fear)
 - [ ] Draugr banish finisher and VFX
 - [ ] Fog thinning that gates progress between clearings
 - [ ] Honor-as-health economy (combine score and HP)

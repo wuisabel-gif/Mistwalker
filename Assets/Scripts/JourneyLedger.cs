@@ -23,8 +23,8 @@ public class JourneyLedger : MonoBehaviour
             return;
         }
 
+        // Lives with the scene so a restart gets a fresh score and HUD references.
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     void Start()

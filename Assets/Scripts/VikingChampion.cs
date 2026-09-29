@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
 public class VikingChampion : MonoBehaviour
@@ -26,6 +27,11 @@ public class VikingChampion : MonoBehaviour
 
     const float ChestHeight = 1.2f;
 
+    [Header("Lantern")]
+    public Color lanternColor = new Color(1f, 0.62f, 0.3f);
+    public float lanternRange = 9f;
+    public float lanternIntensity = 1.6f;
+
     [Header("Recovery")]
     [Tooltip("HP restored for each enemy killed.")]
     public int healPerKill = 15;
@@ -51,6 +57,9 @@ public class VikingChampion : MonoBehaviour
     private int rewardedTier;
     private bool defeated;
     private float lastHurtTime = -999f;
+    private Light lantern;
+    private int finalScore, bestScore;
+    const string BestScoreKey = "Mistwalker.BestScore";
     private float regenBuffer;
 
     void Awake()
@@ -62,11 +71,28 @@ public class VikingChampion : MonoBehaviour
     {
         currentHealth = maxHealth;
         ledger = JourneyLedger.Instance ?? FindObjectOfType<JourneyLedger>();
+
+        lantern = new GameObject("Lantern").AddComponent<Light>();
+        lantern.type = LightType.Point;
+        lantern.color = lanternColor;
+        lantern.range = lanternRange;
+        lantern.intensity = lanternIntensity;
+        lantern.shadows = LightShadows.None; // ponytail: no shadows, cheap on WebGL; enable Soft if it looks flat
+        lantern.transform.SetParent(transform, false);
+        lantern.transform.localPosition = new Vector3(-0.35f, 1.5f, 0.3f); // off-hand side, chest height
     }
 
     void Update()
     {
-        if (defeated) return;
+        if (lantern != null)
+            lantern.intensity = lanternIntensity * (0.85f + 0.15f * Mathf.PerlinNoise(Time.time * 4f, 0f));
+
+        if (defeated)
+        {
+            if (Input.GetKeyDown(KeyCode.R))
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            return;
+        }
 
         ApplyKeyboardMovement();
         RefreshScoreReward();
@@ -192,6 +218,31 @@ public class VikingChampion : MonoBehaviour
             deathSource.PlayOneShot(deathClip);
 
         animator?.SetTrigger("IsDead");
-        Debug.Log("The champion has fallen.");
+
+        var mover = GetComponent<HeroMotionDriver>();
+        if (mover != null)
+            mover.enabled = false; // the fallen don't walk
+
+        finalScore = ledger != null ? ledger.GetScore() : 0;
+        bestScore = Mathf.Max(finalScore, PlayerPrefs.GetInt(BestScoreKey, 0));
+        PlayerPrefs.SetInt(BestScoreKey, bestScore);
+        PlayerPrefs.Save();
+    }
+
+    void OnGUI()
+    {
+        if (!defeated)
+            return;
+
+        var style = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = Mathf.RoundToInt(Screen.height * 0.06f),
+            alignment = TextAnchor.MiddleCenter,
+            richText = true,
+        };
+        int small = Mathf.RoundToInt(style.fontSize * 0.5f);
+        GUI.Label(new Rect(0, 0, Screen.width, Screen.height),
+            "<color=#b3261e>YOU HAVE FALLEN</color>\n" +
+            $"<size={small}>Score {finalScore}    Best {bestScore}\n\nPress R to rise again</size>", style);
     }
 }
