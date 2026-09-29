@@ -9781,23 +9781,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 498403336178473561, guid: 2d1f4ce0d4269664daf0b71b86e41674, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.00000003160675
       objectReference: {fileID: 0}
     - target: {fileID: 498403336178473561, guid: 2d1f4ce0d4269664daf0b71b86e41674, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.000000006577465
       objectReference: {fileID: 0}
     - target: {fileID: 498403336178473561, guid: 2d1f4ce0d4269664daf0b71b86e41674, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.009299939
       objectReference: {fileID: 0}
     - target: {fileID: 498403336178473561, guid: 2d1f4ce0d4269664daf0b71b86e41674, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071068
+      value: -0.7071069
       objectReference: {fileID: 0}
     - target: {fileID: 498403336178473561, guid: 2d1f4ce0d4269664daf0b71b86e41674, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.7071068
+      value: 0.70710677
       objectReference: {fileID: 0}
     - target: {fileID: 498403336178473561, guid: 2d1f4ce0d4269664daf0b71b86e41674, type: 3}
       propertyPath: m_LocalRotation.y
@@ -9823,6 +9823,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Viking_Sword
       objectReference: {fileID: 0}
+    - target: {fileID: 1630729594616570166, guid: 2d1f4ce0d4269664daf0b71b86e41674, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 5d5a32c4acd62114ea08aaaf6ff655dd, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
