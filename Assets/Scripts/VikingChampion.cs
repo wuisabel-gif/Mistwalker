@@ -31,6 +31,9 @@ public class VikingChampion : MonoBehaviour
     public Color lanternColor = new Color(1f, 0.62f, 0.3f);
     public float lanternRange = 9f;
     public float lanternIntensity = 1.6f;
+    [Tooltip("Optional flame effect shown inside the lantern light.")]
+    public GameObject lanternFlame;
+    public float lanternFlameScale = 0.2f;
 
     [Header("Recovery")]
     [Tooltip("HP restored for each enemy killed.")]
@@ -80,6 +83,13 @@ public class VikingChampion : MonoBehaviour
         lantern.shadows = LightShadows.None; // ponytail: no shadows, cheap on WebGL; enable Soft if it looks flat
         lantern.transform.SetParent(transform, false);
         lantern.transform.localPosition = new Vector3(-0.35f, 1.5f, 0.3f); // off-hand side, chest height
+
+        if (lanternFlame != null)
+        {
+            var flame = Instantiate(lanternFlame, lantern.transform);
+            flame.transform.localPosition = Vector3.zero;
+            flame.transform.localScale = Vector3.one * lanternFlameScale;
+        }
     }
 
     void Update()

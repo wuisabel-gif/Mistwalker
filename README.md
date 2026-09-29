@@ -137,7 +137,8 @@ scene singleton that holds score (reset on restart).
 
 1. The player walks into an `AmbushTrigger` collider, which fires once per trigger.
 2. A group of `HostileWarrior`s spawns. Group size grows by 1 for every 500
-   points, up to +8. About 30% are **runners**: 0.8× size, 1.6× speed, 60% health.
+   points, up to +8. About 25% are **wolves** (30 HP, fast, bite for 8); of the
+   draugr, about 30% are **runners**: 0.8× size, 1.6× speed, 60% health.
 3. Each enemy chases the player and hits for 12 damage every 1.25 s once within
    1.6 m.
 4. The player's slash does 9 damage to enemies **in front** (100° arc, 2.2 m) and
@@ -148,7 +149,8 @@ scene singleton that holds score (reset on restart).
 6. On death, a "You have fallen" screen shows the score and best score (saved in
    `PlayerPrefs`); press **R** to restart.
 
-The player carries a flickering **lantern** (warm point light, 9 m range).
+The player carries a flickering **lantern** (warm point light, 9 m range, with a
+Vefects flame), and a crackling **campfire** marks the starting clearing.
 A **spirit guide** wisp waits just ahead at the start of each run and speaks a few lines of lore when you approach.
 
 ### Jump physics
@@ -230,6 +232,8 @@ Assets/
 ├─ PlayerInput.inputactions      # Input System bindings
 ├─ Agarkova_CG/                 # red-haired Viking model (Warrior.fbx stored with Git LFS)
 ├─ Medieval Viking Sword/        # sword model (in the Viking's right hand)
+├─ Wolf/                         # wolf enemy (WolfEnemy.prefab, WolfEnemyController)
+├─ Vefects/                      # fire VFX (lantern flame, campfire)
 ├─ Creep Horror Creature/        # draugr enemy (Prefabs/Draugr.prefab, DraugrController)
 └─ Downloaded Assets/            # third-party: AOSFogWar, Warrior Model (shield),
                                  #   Dry_Trees, RockFREE, Fantasy Skybox
@@ -281,7 +285,8 @@ write-up is in **[LEARNING.md](LEARNING.md)**.
 - **Player character:** *Warrior viking with red hair and armor* by AgarkovaCG
 - **Props:** Medieval Viking Sword; shield from Warrior Model
 - **Fog of war:** *AOS Fog of War*
-- **Enemy:** *Creep Horror Creature* by AC Game Assets
+- **Enemies:** *Creep Horror Creature* by AC Game Assets; *Realistic Furry Wolf* by Rip Vertices Studio
+- **VFX:** *Free Fire VFX* by Vefects
 - **Environment:** Dry Trees, RockFREE, Fantasy Skybox FREE
 - **Engine and packages:** Unity, Cinemachine, Input System
 

@@ -6,6 +6,8 @@ public class AmbushTrigger : MonoBehaviour
     public int baseGroupSize = 2;
     public float spawnRadius = 14f;
     [Range(0f, 1f)] public float runnerChance = 0.3f;
+    public GameObject wolfPrefab;
+    [Range(0f, 1f)] public float wolfChance = 0.25f;
 
     public int spawnedInThisZone;
 
@@ -25,9 +27,16 @@ public class AmbushTrigger : MonoBehaviour
         {
             Vector2 ring = Random.insideUnitCircle * spawnRadius;
             Vector3 spawnPosition = transform.position + new Vector3(ring.x, 0f, ring.y);
-            GameObject foe = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
-            if (Random.value < runnerChance)
-                MakeRunner(foe);
+            if (wolfPrefab != null && Random.value < wolfChance)
+            {
+                Instantiate(wolfPrefab, spawnPosition, Quaternion.identity);
+            }
+            else
+            {
+                GameObject foe = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity);
+                if (Random.value < runnerChance)
+                    MakeRunner(foe);
+            }
             spawnedInThisZone++;
         }
     }
