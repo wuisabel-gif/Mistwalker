@@ -1,14 +1,8 @@
-# My Unity Learning Curve
+# What I Learned Making Mistwalker
 
-A running log of what I actually learned building Mistwalker, written from real
-problems I hit rather than from a textbook. It started with one "simple" task:
-**swapping the warrior's axe for a Viking sword.** That job alone touched almost
-every core Unity concept. Everything after it (new characters, new enemies,
-shipping the game to the web) taught the rest.
-
----
-
-## The shape of the curve
+These are my notes from building this game. Not a tutorial. Mostly a record of the
+things that broke, what I thought was wrong, and what was actually wrong, so I don't
+make the same mistakes twice.
 
 ```
 Confidence
@@ -24,261 +18,206 @@ Confidence
        Day 1     The struggle        The breakthrough
 ```
 
-The lesson of the curve itself: **Unity feels easy for 10 minutes, then humbling
-for a while, then it clicks.** The humbling part is where the real learning is.
+That's pretty much how it went. The first ten minutes in Unity felt easy. Then it
+wasn't easy for a long time.
 
 ---
 
-## Part 1: The sword that wouldn't render
+## The sword that wouldn't show up
 
-### Stage 1: The editor is a 3D world, not a code file
+All I wanted was to swap the warrior's axe for a Viking sword. I figured it would
+take ten minutes. It took days. It also ended up teaching me most of what I know about Unity.
 
-- The **Scene view** is for editing. The **Game view** is what the player sees. They
-  can show completely different things (different camera, different angle).
-- **Play mode is a sandbox.** Any change you make while the game is playing is
-  **thrown away** when you stop. I lost edits more than once before this sank in.
-- **Selecting** an object and pressing **F** frames it in the Scene view, but only if
-  the mouse is hovering over the Scene view. Tiny detail, big time-saver.
+First I had to get used to how the editor works. The Scene view is where you edit and
+the Game view is what the player sees, and they don't have to match. Anything you
+change during Play mode gets thrown away when you stop. I lost work to that more than
+once. Pressing F frames the selected object, but only when your mouse is over the
+Scene view, which took me an embarrassingly long time to notice.
 
-### Stage 2: GameObjects, Components, and the Inspector
+Then the basics. A GameObject is just an empty box until you add components to it. To
+see a mesh you need a MeshFilter, an enabled MeshRenderer and a material. Leave out
+any one and you get nothing. Prefabs are templates, and changing one copy in the scene
+only changes that copy.
 
-- A **GameObject** is an empty container. It does nothing until you add **Components**
-  (MeshFilter = the shape, MeshRenderer = makes it visible, Collider, scripts, etc.).
-- The **Inspector** is a live view of those components. Transform (Position /
-  Rotation / Scale) is the one every object has.
-- A visible mesh needs **all three**: a MeshFilter (which mesh), an enabled
-  MeshRenderer, and a **Material**. Miss any one and you see nothing.
+Putting the sword in his hand meant parenting it to the hand bone, so it moves with
+the animation. The first time, I rotated it to point down in world space. It looked
+perfect in the rest pose and completely wrong once the idle animation moved his arm.
+The rotation has to be set relative to the hand, not the world. A weapon's position
+only means something compared to the bone it's attached to.
 
-### Stage 3: Prefabs are templates, instances are copies
+The worst part was that the sword was invisible. It had a mesh, a renderer, a
+material, and its bounds looked right. Opening the prefab on its own showed it
+perfectly. In the scene, nothing.
 
-- A **prefab** is a reusable blueprint stored as an asset. Dragging it into the scene
-  creates an **instance** linked back to the prefab.
-- Editing one instance creates **overrides** (shown in the Inspector). Editing the
-  prefab asset changes every instance.
-- **Prefab isolation mode** ("Open" on the prefab) renders the object on a neutral
-  background. It became my secret weapon: it proved the *asset was fine* even when
-  the in-scene copy refused to show up, which pointed the bug elsewhere.
+What was actually going on:
 
-### Stage 4: Parenting, bones, and local vs world space
+- There were two warriors. A disabled copy called `Warrior` still had the old
+  skeleton, and `VikingChampion.weapon` pointed at the axe on that one. The visible
+  one, `Warrior (1)`, had a different skeleton with a bone called `hand.r`. I'd been
+  attaching the sword to the wrong, switched-off twin the whole time.
+- An object can be active itself and still not draw if something above it is
+  disabled. That's the difference between `activeSelf` and `activeInHierarchy`.
+- The warrior's body still showed up because skinned meshes follow bone positions,
+  even when the bones' GameObjects are inactive. The sword is a normal mesh, so it
+  just vanished.
+- `Renderer.bounds` gives you numbers even when nothing is on screen. Good bounds
+  don't prove anything.
 
-- Child transforms are **relative to their parent**. `localPosition (0,0,0)` means
-  "exactly at the parent's origin," *not* the world origin.
-- A character is a **skeleton of bones** (nested GameObjects). To put a weapon in a
-  hand, you parent it to the **hand bone**, and it follows the animation for free.
-- **World-space orientation breaks under animation.** I first rotated the sword to
-  point "down" in world space. It was perfect in the bind pose and totally wrong once
-  the idle animation moved the arm. The fix: orient in the **hand's local space**, so
-  the blade keeps the right angle in *every* animation frame.
+What cracked it was putting a bright magenta cube in the same spot. When the cube
+didn't show up either, I knew the sword was fine and the problem was where it was
+attached. After that I stopped trusting "it should be there" and started checking.
 
-> 💡 Biggest mental shift: a held weapon's transform means nothing in isolation.
-> It only makes sense **relative to the bone it hangs from.**
+Once it showed up, it was a giant. The model was imported at 100× scale, so the bones
+had a `lossyScale` of 100 and the sword came out 3 or 4 meters long. Setting its
+`localScale` to 1/100 fixed it. I check import scale on every model now.
 
-### Stage 5: The bug that taught me the most
+I also ended up writing editor tools for this, which I didn't know you could do. Any
+script in an `Assets/Editor/` folder can add its own menu items with
+`[MenuItem("Tools/...")]`. Mine printed the things I needed to see: positions, active
+states, parent chains. Commands like `Map Warriors` and `Trace Active Chain` found
+the two-warriors problem faster than clicking around in the Inspector ever did. New
+menu items only appear after the scripts recompile, so sometimes you have to force a
+refresh (Cmd+R).
 
-The sword had a valid mesh, an enabled renderer, a material, and correct bounds, and
-was **completely invisible** in the scene and game, yet visible in prefab isolation.
-Chasing that taught me a stack of lessons:
-
-1. **`activeInHierarchy` vs `activeSelf`.** An object can be "active" itself but still
-   not render because a **parent up the chain is disabled**. The whole branch goes dark.
-2. **Skinned meshes deform from bone *transforms*, not bone *active state*.** A
-   character's body can look perfectly fine while its bone GameObjects are inactive.
-   That's exactly why my weapon (a normal MeshRenderer parented to a bone) vanished
-   while the warrior still showed.
-3. **There were two warriors.** A *disabled* duplicate (`Warrior`) held the legacy
-   skeleton and the axe that `VikingChampion.weapon` still pointed at, while the
-   *active, visible* one (`Warrior (1)`) had a different skeleton with bones named
-   `hand.r`. I'd been attaching the sword to the **wrong, disabled twin** the whole time.
-4. **`Renderer.bounds` returns values even for objects that aren't drawing.** "The
-   bounds look right" does **not** mean "it's on screen." Don't trust a single signal.
-
-> 💡 Debugging lesson: when something is invisible, **isolate the variable.** I dropped
-> a bright unlit-magenta cube at the same spot. When *it* didn't show either, I knew
-> the problem was the *location/parent*, not the sword mesh. That one test cracked it.
-
-### Stage 6: Scale is a trap
-
-- The visible warrior was imported at **100× scale**. Its bones carry a `lossyScale`
-  of 100, so a sword at `localScale = 1` rendered as a **3–4 meter monster blade.**
-- **`lossyScale`** is an object's true world scale after all parent scales multiply
-  together. To get a normal-sized sword I set `localScale = 1 / parentLossyScale`
-  (i.e. `0.01`) to cancel the 100×.
-- Lesson: **always check a model's import scale.** Mismatched scales are one of the
-  most common "why is everything huge/tiny" beginner traps.
-
-### Stage 7: Editor scripting is a superpower
-
-- A C# file in an **`Assets/Editor/`** folder can add menu items with
-  `[MenuItem("Tools/...")]`.
-- When the GUI fought me (drag-and-drop misfiring, copy-paste renaming objects), a
-  **one-click editor tool** that does the work in code (`PrefabUtility.InstantiatePrefab`,
-  `SetParent`, set the transform) was deterministic and repeatable.
-- I learned to **make the editor print what I needed**: positions, active states,
-  bounds, parent chains. Half of solving the invisible-sword bug was writing small
-  diagnostic commands (`Map Warriors`, `Trace Active Chain`, `List Warrior1 Hand Bones`).
-- Later, one-off editor scripts did whole jobs in one click: swapping the player model,
-  building an enemy prefab, painting the terrain. Run it once, check the result,
-  delete the script.
-
-> 💡 If you find yourself doing the same fiddly thing in the Inspector more than twice,
-> write an editor command for it.
-
-### Stage 8: Workflow lessons (the unglamorous but vital ones)
-
-- **Scripts must recompile before menu items appear.** Saving the file isn't always
-  enough; forcing an asset refresh (Cmd+R) reliably triggers the compile.
-- **Read the Console, but triage it.** Some messages are harmless and constant
-  (deprecation warnings, audio-device notices). Learning which to ignore vs act on is
-  its own skill.
-- **Save the scene (⌘S).** The sword once "disappeared" from the game because I'd
-  attached it and never saved. Unity doesn't autosave scenes.
+And I learned to save the scene. At one point the sword was attached and working, I
+never pressed ⌘S, and it was just gone the next time I opened the project.
 
 ---
 
-## Part 2: Growing the game
+## Swapping in the red-haired Viking
 
-### Stage 9: Render pipelines, and why things turn pink
+Later I replaced the whole player with a red-haired Viking model. His skeleton is
+set up as Humanoid, like the old one, so all the walk, run and slash animations kept
+working. Humanoid rigs map bones to a standard human skeleton, which is what lets
+animations move between characters.
 
-- Unity has three render pipelines: **Built-In**, **URP**, and **HDRP**. Mistwalker uses
-  Built-In. A material whose shader belongs to another pipeline can't be drawn, and
-  Unity paints it **bright magenta/purple** instead.
-- The wolf came out purple because its fur used a **URP/HDRP-only Shader Graph**, even
-  inside the pack's "Built-In" folder. The body used the standard shader and was fine,
-  so the fix was hiding the two fur layers, not replacing the whole model.
-- **Check the listing before downloading.** On the Asset Store, look for the render
-  pipeline table (Built-in: ✅) and the supported Unity versions. A free Terrain pack
-  I wanted required a newer Unity than mine, and Unity's own Viking Village is
-  URP-only, which would have meant converting the whole project.
+The hard part was everything that pointed at the old character. The camera, the
+health bar and the ground check all needed to point at the new one. If you miss one,
+nothing crashes. It just quietly stops working.
 
-> 💡 Purple = "I can't run this shader here." Find which *material* is on the purple
-> part, then check which pipeline its shader targets.
+The sword had another surprise. After the swap the Viking was holding it by the blade. Ouch.
+The model's pivot, the point it rotates around, was at the blade end instead of the
+handle. So I measured the mesh's bounds, worked out which end was the handle, flipped
+the sword around and slid it so the grip sat in his fist. Then I checked it while he
+was moving, because it can look right standing still and wrong mid-swing.
 
-### Stage 10: Swapping characters: Humanoid vs Generic rigs
+## New enemies, and why the wolf was purple
 
-- A **Humanoid** rig maps bones to a standard human skeleton (an **Avatar**), so
-  animations can move between characters. Swapping the old warrior for the red-haired
-  Viking kept all the walk/run/slash animations because both were Humanoid.
-- A **Generic** rig (the Creep, the wolf) has its own skeleton, and humanoid clips don't
-  apply. Each needed its own **Animator Controller** built from its own clips.
-- The glue between code and animation is **parameter names**. `HostileWarrior` only
-  fires two triggers, `IsAttacking` and `IsDead`, so any creature works as an enemy as
-  long as its controller answers to those two names.
-- When you replace a character, everything that pointed at the old one (camera follow,
-  health bar, ground check) must be **re-pointed**. Missing one reference means a
-  silently broken feature.
+I swapped the shirtless zombie for a creepier creature, then added wolves. Neither
+has a Humanoid skeleton. They're "Generic", so the zombie's animations don't work on
+them, and each needed its own animation controller built from its own clips. What
+made this manageable is that my enemy script only sends two signals, `IsAttacking`
+and `IsDead`. Any creature can be an enemy as long as its controller responds to
+those two names.
 
-### Stage 11: Hold the sword by the handle
+The wolf showed up bright purple. Not great. Unity has three render pipelines (Built-In, URP and
+HDRP), and my game uses Built-In. When a material's shader belongs to a different
+pipeline, Unity can't draw it and paints it magenta instead. The wolf's fur used a
+URP/HDRP shader, even in the folder labeled Built-In. The body was fine, so I just hid
+the fur layers. Now I check the render pipeline and supported Unity versions on a
+store page before I download anything. The Terrain Sample pack needed a newer Unity
+than mine, and Unity's free Viking Village only works in URP.
 
-- A mesh's **pivot** isn't always where you'd hold it. The sword's pivot sat at the
-  *blade* end, so attaching it to the hand made the Viking hold the blade (剑刃), not
-  the hilt (剑柄).
-- The fix was measuring instead of guessing: find the blade's long axis from the mesh
-  **bounds**, work out which end is the hilt, flip the sword 180°, and slide it so the
-  grip point lands in the hand.
-- Then **check it animated**, not just in the rest pose. A weapon can look right in
-  T-pose and wrong mid-swing.
+## Making the fighting feel fair
 
-### Stage 12: Making combat feel fair
+My first attack hit anything inside a circle around me, including monsters behind my
+back. I didn't even have to look at them. Way too easy. Now a swing only hits what's in front of
+you, it can't hit through a tree, and if a trunk is right in front of you, you don't
+swing at all. Otherwise the sword just goes straight through the bark.
 
-- The first attack hit everything inside a sphere, including enemies **behind** me.
-  Real-feeling combat needs three checks:
-  1. **Facing:** only hit targets inside an arc in front (`Vector3.Angle` against
-     `transform.forward`).
-  2. **Line of sight:** a `Physics.Linecast` from chest to target; if a tree is in
-     the way, no hit.
-  3. **Blocked swing:** a short `SphereCast` forward; if a trunk is within blade reach,
-     don't swing at all.
-- **Players need a way back.** With no healing, every hit was permanent. Heal-on-kill
-  plus out-of-combat regeneration made fights winnable and rewarded good play.
-- **Death needs an ending.** Without a "You have fallen / press R" screen the game just
-  froze. `PlayerPrefs` keeps a best score between plays.
-- **`DontDestroyOnLoad` bites on restart.** The score keeper survived the scene reload
-  but kept pointing at the *old* scene's text objects. For a one-scene game, let it
-  reload with the scene.
-- **Unity's fake null:** `GetComponent<T>() ?? AddComponent<T>()` doesn't work on Unity
-  objects. Use an explicit `if (x == null)` check.
+There was also no way to get health back, so every hit was permanent. Now killing a
+monster heals you a bit, and you slowly regenerate if you stay out of a fight for a
+few seconds.
 
-### Stage 13: Atmosphere is mostly settings
+When you died, the game just froze. I added a "You have fallen" screen with your
+score, your best score and "press R to restart". Restarting broke the score display
+at first. The score keeper was set to survive scene reloads (`DontDestroyOnLoad`),
+so it kept pointing at text from the old scene. I only have one scene, so it didn't
+need to survive.
 
-- **Fog** is a Lighting setting, but the **skybox ignores fog**, so the horizon showed a
-  hard line. Setting the camera background to the fog colour made the distance melt
-  into mist.
-- A close, downward camera needs **thicker fog** than you'd guess to feel misty.
-- The "checkerboard" ground was the terrain's **missing texture layers**, not a design
-  choice. One free CC0 texture (Poly Haven) painted as a Terrain Layer fixed it.
-- Small touches carry a lot: a flickering lantern light, a campfire with sound only
-  nearby (3D audio), music that loops quietly.
+One C# thing that got me: `GetComponent<T>() ?? AddComponent<T>()` doesn't work on
+Unity objects. Unity has its own idea of null, so you need a plain `if (x == null)`.
+
+## Fog, light and the ground
+
+Most of the atmosphere came from settings, not art. I turned on fog, made it a cold
+blue-grey, and swapped the bright blue sun for dim moonlight. The fog doesn't affect
+the skybox, though, so there was a hard line on the horizon. Setting the camera's
+background to the fog colour made the distance fade into mist. The camera is close
+and looks down, so the fog had to be thicker than I expected.
+
+The ground was an ugly checkerboard for ages. I hated it. I thought it was just a placeholder
+texture. It turned out the terrain's texture layers were missing entirely. One free
+forest-floor texture from Poly Haven fixed it.
+
+The small things did more than I expected: a flickering lantern, a campfire you only
+hear when you're near it, and quiet music in the background.
 
 ---
 
-## Part 3: Shipping it
+## Getting it online
 
-### Stage 14: Continuous builds and the web version
+I wanted the game playable in a browser, so it builds automatically on GitHub now.
+The old GitHub check tried to build it as a .NET project, which can't work, because
+Unity games need the Unity Editor to build.
 
-- **GitHub Actions + GameCI** builds the game on every push. The old `.NET` workflow
-  could never compile a Unity project; Unity builds need the Unity Editor.
-- **Licensing is its own puzzle.** My school account signs in through USC, so it has no
-  password, and CI can't log in with it. A separate free Personal account worked. The
-  license file from Unity Hub is tied to my Mac, so CI falls back to signing in with
-  that account's email and password.
-- **CI catches what you can't see.** A find-and-replace in a "docs" commit turned
-  `a - b` into `a: b` inside a C# file. Unity wasn't installed at the time, so only the
-  CI build noticed.
-- **WebGL on GitHub Pages** needed two settings: the scene listed in Build Settings
-  (otherwise the build is empty) and *decompression fallback* on (Pages can't serve
-  pre-compressed files the way the browser expects).
-- Browsers **block sound until the first click or key press**. That's normal, not a bug.
+Licensing was a whole puzzle, and honestly the most annoying part. My school account logs in through USC, so there's no
+password, and GitHub's build machine can't sign in with it. I made a separate free
+Unity account just for builds. Even then, the license file is tied to my Mac, so the
+build ends up signing in with that account's email and password instead.
 
-### Stage 15: Repository hygiene
+The automatic build caught a bug I never would have seen. I'd done a find-and-replace
+on some text in a docs commit, and it changed `a - b` into `a: b` inside a C# file. I
+didn't have Unity installed at the time, so nothing complained until the build did.
 
-- **GitHub rejects files over 100 MB.** The Viking model is 115 MB, so it lives in
-  **Git LFS**, and CI has to check out with `lfs: true`.
-- **Assets pile up.** Asset packs bring demo scenes, colour variants, and other
-  pipelines' versions. A dependency trace from the scene found **624 MB** nothing used.
-- **Anything in a `Resources` folder ships in every build,** used or not. That makes
-  extras folders worth deleting.
-- **Convert big media.** A 40 MB WAV became a 4 MB MP3 with no audible difference.
-- Deleted files stay in **git history**, so cleaning up is safe to undo.
+For the web version to work, the scene had to be listed in Build Settings (otherwise
+the build is just empty), and "decompression fallback" had to be on for GitHub Pages.
+Also, browsers don't play sound until you click or press a key. That's normal and not
+a bug.
 
----
+## Keeping the project small
 
-## The meta-lessons
-
-1. **A "simple" task is a great teacher.** "Put a sword in his hand" forced me through
-   prefabs, parenting, bones, local/world space, active state, scale, materials,
-   culling, animation, and editor scripting.
-2. **Trust data over assumptions.** "It should be there" cost me hours; one diagnostic
-   log (`activeInHierarchy=False`) ended the mystery instantly.
-3. **Isolate one variable at a time.** The magenta cube and prefab isolation view each
-   removed a whole class of possible causes.
-4. **The Scene is a graph, not a list.** Almost every hard bug traced back to *where*
-   an object sat in the hierarchy: its parent, its scale, its active branch.
-5. **Check it running, not just placed.** The sword grip, the fog, the wolf's colours:
-   each looked fine in one view and wrong in another. The Game view in Play mode is
-   the only one that counts.
+GitHub won't take files over 100 MB, and the Viking model is 115 MB, so it lives in
+Git LFS. Asset packs also bring a lot of stuff you never use: demo scenes, colour
+variants, versions for other pipelines. When I traced what the scene actually uses,
+624 MB of files weren't used by anything. Anything in a folder named `Resources` gets
+packed into the game even if nothing uses it, so those folders are worth checking.
+Converting a 40 MB WAV to a 4 MB MP3 sounded the same. Deleted files stay in git
+history, so cleaning up isn't scary.
 
 ---
 
-## Cheat-sheet I wish I'd had on day one
+## What I'd tell myself on day one
 
-| Symptom | Likely cause |
+A "simple" task teaches you the most. Putting a sword in a hand dragged me through
+prefabs, bones, scale, active state and editor scripts.
+
+Check, don't assume. Every time I said "it should be there," I was wrong, and one
+debug log or one test cube settled it.
+
+Where an object sits in the hierarchy matters more than almost anything else. Most of
+my hard bugs came down to its parent, its scale, or a switched-off branch above it.
+
+And test it in Play mode. The sword grip, the fog and the wolf's colour all looked
+fine somewhere else and wrong in the actual game.
+
+## Quick reference: things that bit me
+
+| What I saw | What it actually was |
 | --- | --- |
-| Object invisible but components look fine | A **parent is disabled** (`activeInHierarchy = false`) |
-| Object huge or microscopic | **Import scale** / parent `lossyScale` mismatch |
-| Weapon right in bind pose, wrong when animating | Oriented in **world space** instead of **bone-local** space |
-| Character holds the weapon by the wrong end | The mesh **pivot** is at the other end; flip and offset to the grip |
-| Renders in prefab mode but not in scene | Difference is the **scene instance** (active state, parent, scale) |
-| Mesh shows nothing at all | Missing **Material**, disabled **MeshRenderer**, or empty **MeshFilter** |
-| Bright pink / purple object | Shader from **another render pipeline** (URP/HDRP on Built-In) |
-| Checkerboard ground | Terrain has **missing Terrain Layers** |
-| Hard line where fog meets sky | **Skybox isn't fogged**; use a solid camera background in the fog colour |
-| New character won't animate | **Generic** rig needs its own controller; Humanoid needs an **Avatar** |
-| Edits disappear | You changed them in **Play mode**, or didn't **save the scene** |
-| New `[MenuItem]` doesn't appear | Scripts haven't **recompiled** yet |
-| HUD breaks after restarting | An object survived the reload (`DontDestroyOnLoad`) with stale references |
-| `git push` rejected for a big file | Over **100 MB**; track it with **Git LFS** |
-| Web build is empty or won't load | No scene in **Build Settings**, or compression without **decompression fallback** |
+| Object invisible, components look fine | A parent is disabled (`activeInHierarchy` is false) |
+| Object huge or tiny | Import scale, or the parent's `lossyScale` |
+| Weapon fine standing still, wrong when animating | Rotated in world space instead of relative to the bone |
+| Holding the sword by the wrong end | The mesh's pivot is at the other end |
+| Shows in prefab mode but not in the scene | Something about the scene copy (parent, scale, active state) |
+| Bright pink or purple | A shader from a different render pipeline |
+| Checkerboard ground | Terrain has no texture layers |
+| Hard line where fog meets sky | Skybox isn't fogged; use a solid background colour |
+| New character won't animate | Generic rig needs its own controller |
+| Edits disappeared | Made them in Play mode, or didn't save the scene |
+| New menu item missing | Scripts haven't recompiled yet |
+| Score broke after restart | Something survived the reload with old references |
+| `git push` rejected | File over 100 MB; use Git LFS |
+| Web build empty or won't load | No scene in Build Settings, or decompression fallback off |
 
----
-
-*Still climbing the curve, but now I know which way is up.*
+Still figuring it out, but it's a lot less confusing than it was.
