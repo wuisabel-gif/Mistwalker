@@ -6,6 +6,8 @@ public class AmbushTrigger : MonoBehaviour
     public int baseGroupSize = 2;
     public float spawnRadius = 14f;
     [Range(0f, 1f)] public float runnerChance = 0.3f;
+    [Tooltip("No ambush fires during the first seconds of a run.")]
+    public float startGraceSeconds = 12f;
     public GameObject wolfPrefab;
     [Range(0f, 1f)] public float wolfChance = 0.25f;
 
@@ -13,10 +15,13 @@ public class AmbushTrigger : MonoBehaviour
 
     private bool consumed;
 
-    void OnTriggerEnter(Collider other)
+    // Stay (not Enter) so a zone the player starts inside still fires once the grace ends.
+    void OnTriggerStay(Collider other)
     {
         if (consumed || !other.CompareTag("Player") || enemyPrefab == null)
             return;
+        if (Time.timeSinceLevelLoad < startGraceSeconds)
+            return; // quiet opening: time to hear the spirit guide by the campfire
 
         consumed = true;
 

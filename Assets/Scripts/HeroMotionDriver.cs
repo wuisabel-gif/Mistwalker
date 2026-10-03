@@ -99,14 +99,14 @@ public class HeroMotionDriver : MonoBehaviour
         // {
         //     isBasicSlashing = false;
         // }
-        if (isBasicSlashPressed && champion != null && champion.BladeBlocked())
-            isBasicSlashPressed = false; // a tree is in the way; don't swing through it
-
-        if (characterController.isGrounded && isBasicSlashPressed && !isBasicSlashing)
+        // The champion owns the cooldown, the tree check and the hit; no swing if it says no.
+        bool wantsSlash = characterController.isGrounded && isBasicSlashPressed && !isBasicSlashing;
+        if (wantsSlash)
+            isBasicSlashPressed = false;
+        if (wantsSlash && (champion == null || champion.TryStartSwing()))
         {
             animator.SetTrigger("isBasicSlashingTrigger");
-            isBasicSlashPressed = false;
-            isBasicSlashing = true;     
+            isBasicSlashing = true;
             isBasicSlashAnimated = true;
             canMove = false;
             canJump = false;

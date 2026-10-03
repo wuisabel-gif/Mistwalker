@@ -9,9 +9,6 @@ public class VikingChampion : MonoBehaviour
     public int currentHealth;
     public int scoreSnapshot;
 
-    [Header("Movement")]
-    public float moveSpeed = 3.4f;
-
     [Header("Combat")]
     public GameObject weapon;
     [FormerlySerializedAs("attackRange")]
@@ -22,6 +19,8 @@ public class VikingChampion : MonoBehaviour
     public float strikeDelay = 1.6f;
     [Tooltip("Degrees in front of the champion the swing covers.")]
     public float strikeArc = 100f;
+    [Tooltip("Seconds into the slash animation when the blade connects.")]
+    public float strikeHitDelay = 0.35f;
     [Tooltip("How far the blade reaches from the chest; trees closer than this block the swing.")]
     public float bladeReach = 1.2f;
 
@@ -104,24 +103,24 @@ public class VikingChampion : MonoBehaviour
             return;
         }
 
-        ApplyKeyboardMovement();
         RefreshScoreReward();
         Regenerate();
-
-        if (Input.GetMouseButtonDown(0) && Time.time >= nextStrikeTime)
-        {
-            nextStrikeTime = Time.time + strikeDelay;
-            SwingWeapon();
-        }
     }
 
-    void ApplyKeyboardMovement()
+    // Called by HeroMotionDriver when the slash animation starts. Owns the cooldown and the
+    // tree check; the damage itself lands mid-swing so it matches what the player sees.
+    public bool TryStartSwing()
     {
-        Vector3 input = new Vector3(Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical"));
-        if (input.sqrMagnitude > 1f) input.Normalize();
+        if (defeated || Time.time < nextStrikeTime || BladeBlocked())
+            return false;
 
-        transform.Translate(input * moveSpeed * Time.deltaTime, Space.World);
+        nextStrikeTime = Time.time + strikeDelay;
+        if (swingSource != null && swingClip != null)
+            swingSource.PlayOneShot(swingClip);
+        Invoke(nameof(SwingWeapon), strikeHitDelay);
+        return true;
     }
+
 
     void RefreshScoreReward()
     {
@@ -142,10 +141,7 @@ public class VikingChampion : MonoBehaviour
 
     void SwingWeapon()
     {
-        if (swingSource != null && swingClip != null)
-            swingSource.PlayOneShot(swingClip);
-
-        if (weapon == null)
+        if (defeated || weapon == null)
             return;
 
         weapon.SetActive(true);

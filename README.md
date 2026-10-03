@@ -116,10 +116,10 @@ scene singleton that holds score (reset on restart).
 
 | Script | In scene | Role |
 | --- | --- | --- |
-| `HeroMotionDriver.cs` | ✅ | Main locomotion. Reads the `CharacterControls` action map, drives `CharacterController.Move`, turns toward the move direction with `Quaternion.Slerp`, sets animator params `IsWalking`, `IsRunning`, `isJumping`, `isBasicSlashingTrigger`. Locks movement during the slash until `BasicSlash` reaches 85% normalized time. |
+| `HeroMotionDriver.cs` | ✅ | The only thing that moves the player. Reads the `CharacterControls` action map, drives `CharacterController.Move`, turns toward the move direction with `Quaternion.Slerp`, sets animator params `IsWalking`, `IsRunning`, `isJumping`, `isBasicSlashingTrigger`. Locks movement during the slash until `BasicSlash` reaches 85% normalized time. |
 | `FootingProbe.cs` | ✅ | Downward `Physics.Raycast` (0.45 m, filtered by `groundMask`) exposing `isGrounded`. |
-| `VikingChampion.cs` | ✅ | Player health (120), sword strike, death. On left click it does `Physics.OverlapSphere` at the weapon position and calls `HostileWarrior.ReceiveHit` on every collider tagged `Enemy`. Heals +20 HP each time score passes a multiple of 900. |
-| `HostileWarrior.cs` | via `Draugr.prefab` | Enemy AI. Moves straight at the player with `Vector3.MoveTowards` (no pathfinding). When in range it attacks on a cooldown and calls `VikingChampion.ReceiveDamage`. On death it awards 125 points and is destroyed after 2.5 s. |
+| `VikingChampion.cs` | ✅ | Player health (120), combat, recovery, lantern and death screen. `HeroMotionDriver` calls `TryStartSwing()` when a slash starts; it enforces the cooldown and tree check, and 0.35 s later `SwingWeapon` hits enemies tagged `Enemy` in a 100° arc with clear line of sight. Heals on kills, regenerates out of combat, and +20 HP each time score passes a multiple of 900. |
+| `HostileWarrior.cs` | via `Draugr.prefab` / `WolfEnemy.prefab` | Enemy AI. Chases the player, steering around trees by probing directions ahead with `SphereCast` (no NavMesh). When in range it attacks on a cooldown and calls `VikingChampion.ReceiveDamage`. On death it awards 125 points, heals the player, and is destroyed after 2.5 s. |
 | `AmbushTrigger.cs` | ✅ ×5 | One-shot trigger volume. When the player enters, it spawns `baseGroupSize + clamp(score / 500, 0, 8)` enemies at random points inside `spawnRadius`. |
 | `JourneyLedger.cs` | ✅ | Singleton for score and kill count. Updates the HUD `Text` and flashes the score color on each kill. |
 | `VitalityDisplay.cs` | ✅ | Health bar. Sets `Image.fillAmount` and color: green above 65%, amber above 35%, red otherwise. |
@@ -136,13 +136,14 @@ scene singleton that holds score (reset on restart).
 ### Combat loop
 
 1. The player walks into an `AmbushTrigger` collider, which fires once per trigger.
+   No ambush fires in the first 12 s of a run (`startGraceSeconds`).
 2. A group of `HostileWarrior`s spawns. Group size grows by 1 for every 500
    points, up to +8. About 25% are **wolves** (30 HP, fast, bite for 8); of the
    draugr, about 30% are **runners**: 0.8× size, 1.6× speed, 60% health.
 3. Each enemy chases the player and hits for 12 damage every 1.25 s once within
    1.6 m.
-4. The player's slash does 9 damage to enemies **in front** (100° arc, 2.2 m) and
-   has a 1.6 s cooldown. Trees block hits, and the swing is cancelled if a trunk is
+4. The player's slash does 9 damage to enemies **in front** (100° arc, 2.2 m),
+   landing 0.35 s into the swing, with a 1.6 s cooldown. Trees block hits, and the swing is cancelled if a trunk is
    within blade reach (1.2 m). An enemy with 45 HP takes 5 hits.
 5. Each kill gives +125 score and **heals +15 HP**. After 4 s without taking
    damage the player regenerates 5 HP/s. Every 900 score also heals +20 HP.
@@ -245,23 +246,21 @@ ProjectSettings/                 # Unity project settings (editor version pinned
 
 ## Known Issues
 
-- **Two movement paths on the player.** `HeroMotionDriver` moves the
-  `CharacterController` through the Input System. `VikingChampion` also calls
-  `transform.Translate` from legacy `Input.GetAxis`. With both enabled, WASD
-  moves the player twice.
-- **Attack isn't tied to the animation.** `VikingChampion` applies damage right
-  away on mouse down. It is not driven by an animation event, and its cooldown
-  is separate from `HeroMotionDriver`'s slash lock.
-- **Enemies ignore obstacles.** `HostileWarrior` moves in a straight line.
-  `com.unity.ai.navigation` is installed but no NavMesh is baked.
+- **Enemy avoidance is local only.** `HostileWarrior` steers around trees by
+  probing a few directions ahead (`SphereCast`). It can still get stuck in a dense
+  cluster of trunks. Baking a NavMesh (`com.unity.ai.navigation` is installed)
+  would fix that properly.
+- **Hit timing is a fixed delay.** Damage lands `strikeHitDelay` (0.35 s) after the
+  slash starts, not from an animation event on the `BasicSlash` clip.
 
 ---
 
 ## Roadmap
 
-- [ ] Merge player movement into `HeroMotionDriver`; keep `VikingChampion` for health and combat only
-- [ ] Apply damage from an animation event on the `BasicSlash` clip
-- [ ] NavMesh-based draugr pursuit
+- [x] Merge player movement into `HeroMotionDriver`; keep `VikingChampion` for health and combat only
+- [x] Damage lands mid-swing (timed delay; an animation event would be exact)
+- [x] Enemies steer around trees
+- [ ] NavMesh-based pursuit for dense forests
 - [x] Lantern light
 - [ ] Darkness pressure (lantern fuel / fear)
 - [ ] Draugr banish finisher and VFX

@@ -13,6 +13,8 @@ public class HostileWarrior : MonoBehaviour
     public int hitStrength = 12;
     [FormerlySerializedAs("attackCooldown")]
     public float attackInterval = 1.25f;
+    [Tooltip("How far ahead the enemy looks for trees to walk around.")]
+    public float lookAhead = 1.5f;
 
     [Header("Audio")]
     [FormerlySerializedAs("audioSource")]
@@ -52,16 +54,45 @@ public class HostileWarrior : MonoBehaviour
         float distanceToHero = Vector3.Distance(transform.position, hero.position);
         if (distanceToHero > meleeDistance)
         {
-            transform.position = Vector3.MoveTowards(transform.position, flatHero, pursuitSpeed * Time.deltaTime);
-            transform.LookAt(flatHero);
+            Vector3 heading = Steer((flatHero - transform.position).normalized);
+            transform.position += heading * pursuitSpeed * Time.deltaTime;
+            transform.rotation = Quaternion.LookRotation(heading);
             return;
         }
+
+        transform.LookAt(flatHero);
 
         if (Time.time >= nextAttackTime)
         {
             nextAttackTime = Time.time + attackInterval;
             StrikeHero();
         }
+    }
+
+    // Walk around trees instead of through them: try the straight line first, then fan out
+    // left and right until a direction is clear.
+    // ponytail: local avoidance only, can get stuck in a dense cluster; bake a NavMesh if that happens.
+    static readonly float[] SteerAngles = { 0f, 35f, -35f, 70f, -70f, 105f, -105f };
+
+    Vector3 Steer(Vector3 desired)
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.8f;
+        foreach (float angle in SteerAngles)
+        {
+            Vector3 dir = Quaternion.Euler(0f, angle, 0f) * desired;
+            if (!ObstacleAhead(origin, dir))
+                return dir;
+        }
+        return desired;
+    }
+
+    bool ObstacleAhead(Vector3 origin, Vector3 dir)
+    {
+        if (!Physics.SphereCast(origin, 0.35f, dir, out RaycastHit hit, lookAhead, ~0, QueryTriggerInteraction.Ignore))
+            return false;
+
+        Collider c = hit.collider;
+        return !c.CompareTag("Enemy") && !c.CompareTag("Player") && !(c is TerrainCollider) && !c.transform.IsChildOf(transform);
     }
 
     void StrikeHero()
